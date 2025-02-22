@@ -1,9 +1,54 @@
-void setup() {
-  // put your setup code here, to run once:
+#include <LiquidCrystal_I2C.h>
+#include <Servo.h>
 
+#define SERVO_PIN 9
+#define BUTTON_PIN 7
+#define POT_PIN A0
+
+LiquidCrystal_I2C lcd(0x27, 20, 4);
+Servo windowServo;
+
+bool manualMode = false;
+int windowPosition = 0;
+
+void setup() {
+  Serial.begin(9600);
+  
+  lcd.init();
+  lcd.backlight();
+  lcd.print("Mode: AUTOMATIC");
+  
+  windowServo.attach(SERVO_PIN);
+  windowServo.write(0);
+  
+  pinMode(BUTTON_PIN, INPUT_PULLUP);
 }
 
 void loop() {
-  // put your main code here, to run repeatedly:
+  if (digitalRead(BUTTON_PIN) == LOW) {
+    delay(200);
+    manualMode = !manualMode;
+    
+    lcd.clear();
+    lcd.print(manualMode ? "Mode: MANUAL" : "Mode: AUTOMATIC");
+    delay(1000);
+  }
 
+  if (manualMode) {
+    int potValue = analogRead(POT_PIN);
+    windowPosition = map(potValue, 0, 1023, 0, 90);
+    windowServo.write(windowPosition);
+  } else {
+    if (Serial.available()) {
+      windowPosition = Serial.parseInt();
+      windowServo.write(windowPosition);
+    }
+  }
+
+  lcd.setCursor(0, 1);
+  lcd.print("Window: ");
+  lcd.print(windowPosition);
+  lcd.print("% ");
+
+  delay(100);
 }
