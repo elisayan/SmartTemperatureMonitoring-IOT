@@ -10,6 +10,7 @@ Servo windowServo;
 
 bool manualMode = false;
 int windowPosition = 0;
+float currentTemperature = 0.0; 
 
 void setup() {
   Serial.begin(9600);
@@ -21,14 +22,24 @@ void setup() {
   windowServo.attach(SERVO_PIN);
   windowServo.write(0);
   
-  pinMode(BUTTON_PIN, INPUT_PULLUP);
+  pinMode(BUTTON_PIN, INPUT);
 }
 
 void loop() {
-  if (digitalRead(BUTTON_PIN) == LOW) {
+  if (Serial.available()) {
+    String input = Serial.readStringUntil('\n');
+    if (input.startsWith("TEMP:")) {
+      sscanf(input.c_str(), "TEMP:%f,POS:%d", &currentTemperature, &windowPosition);
+      if (!manualMode) {
+        windowServo.write(windowPosition);
+      }
+    }
+  }
+
+  if (digitalRead(BUTTON_PIN) == HIGH) {
     delay(200);
     manualMode = !manualMode;
-    
+    Serial.println("button pressed");
     lcd.clear();
     lcd.print(manualMode ? "Mode: MANUAL" : "Mode: AUTOMATIC");
     delay(1000);
@@ -50,5 +61,11 @@ void loop() {
   lcd.print(windowPosition);
   lcd.print("% ");
 
+  lcd.setCursor(0, 2);
+  if (manualMode) {
+    lcd.print("Temp: ");
+    lcd.print(currentTemperature);
+    lcd.print("C");
+  }
   delay(100);
 }
