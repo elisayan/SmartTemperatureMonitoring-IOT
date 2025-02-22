@@ -1,12 +1,12 @@
 #include <WiFi.h>
 #include <PubSubClient.h>
 
-const char* ssid = "TP_LINK-2658";
+const char* ssid = "TP-LINK_2658";
 const char* password = "66864073";
 const char* mqtt_server = "broker.mqtt-dashboard.com";
 const char* topic = "temperature/data";
 
-#define TMP36_PIN 4
+#define TMP36_PIN 1
 #define GREEN_LED 6
 #define RED_LED 7
 
