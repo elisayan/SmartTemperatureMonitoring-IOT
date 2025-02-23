@@ -25,6 +25,13 @@ public class MQTTAgent extends AbstractVerticle {
             client.connect(1883, BROKER_ADDRESS, c -> {
                 if (c.succeeded()) {
                     client.subscribe(TEMPERATURE_TOPIC, 1);
+                    
+                    client.publishHandler(msg -> {
+                        if (msg.topicName().equals(TEMPERATURE_TOPIC)) {
+                            String payload = msg.payload().toString();
+                            handleTemperature(payload);
+                        }
+                    });
                 } else {
                     System.err.println("MQTT connection failed");
                 }
