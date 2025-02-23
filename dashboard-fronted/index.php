@@ -9,6 +9,13 @@
     <link rel="stylesheet" href="style.css">
 </head>
 <body class="bg-light">
+    <header class="text-center py-4">
+        <div class="container">
+            <h1 class="display-4">Smart Temperature Monitoring</h1>
+            <p class="lead">Monitor and control your environment in real-time</p>
+        </div>
+    </header>
+
     <div class="container-fluid py-4">
         <div class="row">
             <div class="col-md-8">
