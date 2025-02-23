@@ -28,11 +28,13 @@ void setup() {
 void loop() {
   if (Serial.available()) {
     String input = Serial.readStringUntil('\n');
-    if (input.startsWith("TEMP:")) {
-      sscanf(input.c_str(), "TEMP:%f,POS:%d", &currentTemperature, &windowPosition);
-      if (!manualMode) {
-        windowServo.write(windowPosition);
-      }
+    if (input.startsWith("POS:")) {
+      int pos = input.substring(4).toInt();
+      windowServo.write(pos);
+    }
+    
+    else if (input.startsWith("TEMP:")) {
+      currentTemperature = input.substring(5).toFloat();
     }
   }
 

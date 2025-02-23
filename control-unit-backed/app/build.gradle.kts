@@ -16,9 +16,10 @@ repositories {
 }
 
 dependencies {
-    implementation("io.vertx:vertx-core:4.5.0")
+    implementation ("io.vertx:vertx-core:4.5.0")
     implementation ("io.vertx:vertx-web:4.5.0")
     implementation ("io.vertx:vertx-mqtt:4.5.0")
+    implementation("io.github.java-native:jssc:2.9.6")
 
     // Use JUnit Jupiter for testing.
     testImplementation(libs.junit.jupiter)

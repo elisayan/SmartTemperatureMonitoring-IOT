@@ -8,8 +8,8 @@ public class App {
         //System.out.println("Hello World");
         Vertx vertx = Vertx.vertx();
         DataService dataService = new DataService(8080);
-        //MQTTAgent mqttAgent = new MQTTAgent(dataService);
+        MQTTAgent mqttAgent = new MQTTAgent(dataService);
         vertx.deployVerticle(dataService);
-        //vertx.deployVerticle(mqttAgent);
+        vertx.deployVerticle(mqttAgent);
     }
 }
