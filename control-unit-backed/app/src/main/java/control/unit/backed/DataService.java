@@ -32,6 +32,7 @@ public class DataService extends AbstractVerticle{
         Router router = Router.router(vertx);
         router.route().handler(BodyHandler.create());
         
+        router.post("/api/data").handler(this::handleAddNewData);
         router.get("/api/data").handler(this::handleGetTemperatureData);
         
         router.get("/api/state").handler(this::handleGetCurrentState);
@@ -43,10 +44,21 @@ public class DataService extends AbstractVerticle{
         vertx.createHttpServer().requestHandler(router).listen(port);
     }
 
-    public void addTemperatureData(double value) {
-        temperatureData.addFirst(new DataPoint(value, System.currentTimeMillis(), "sensor"));
-        if (temperatureData.size() > MAX_SIZE) {
-            temperatureData.removeLast();
+    private void handleAddNewData(RoutingContext ctx) {
+        JsonObject body = ctx.body().asJsonObject();
+        if (body != null) {
+            double value = body.getDouble("value");
+            String place = body.getString("place", "unknown");
+            long time = System.currentTimeMillis();
+            
+            temperatureData.addFirst(new DataPoint(value, time, place));
+            if (temperatureData.size() > MAX_SIZE) {
+                temperatureData.removeLast();
+            }
+            
+            ctx.response().setStatusCode(200).end();
+        } else {
+            ctx.response().setStatusCode(400).end("Invalid data");
         }
     }
 
@@ -60,6 +72,13 @@ public class DataService extends AbstractVerticle{
         ctx.response()
             .putHeader("content-type", "application/json")
             .end(arr.encodePrettily());
+    }
+    
+    public void addTemperatureData(double value) {
+        temperatureData.addFirst(new DataPoint(value, System.currentTimeMillis(), "sensor"));
+        if (temperatureData.size() > MAX_SIZE) {
+            temperatureData.removeLast();
+        }
     }
 
     private void handleGetCurrentState(RoutingContext ctx) {
