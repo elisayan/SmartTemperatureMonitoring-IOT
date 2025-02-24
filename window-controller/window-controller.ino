@@ -10,18 +10,18 @@ Servo windowServo;
 
 bool manualMode = false;
 int windowPosition = 0;
-float currentTemperature = 0.0; 
+float currentTemperature = 0.0;
 
 void setup() {
   Serial.begin(9600);
-  
+
   lcd.init();
   lcd.backlight();
   lcd.print("Mode: AUTOMATIC");
-  
+
   windowServo.attach(SERVO_PIN);
   windowServo.write(0);
-  
+
   pinMode(BUTTON_PIN, INPUT);
 }
 
@@ -29,12 +29,14 @@ void loop() {
   if (Serial.available()) {
     String input = Serial.readStringUntil('\n');
     if (input.startsWith("POS:")) {
-      int pos = input.substring(4).toInt();
-      windowServo.write(pos);
-    }
-    
-    else if (input.startsWith("TEMP:")) {
+      windowPosition = input.substring(4).toInt();
+      windowServo.write(windowPosition);
+    } else if (input.startsWith("TEMP:")) {
       currentTemperature = input.substring(5).toFloat();
+    } else if (input.startsWith("MODE:")) {
+      String mode = input.substring(5);
+      lcd.setCursor(0, 0);
+      lcd.print("Mode: " + mode);
     }
   }
 

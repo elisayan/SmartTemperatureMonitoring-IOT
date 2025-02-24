@@ -7,10 +7,14 @@ public class MQTTAgent extends AbstractVerticle {
     private static final String BROKER_ADDRESS = "broker.mqtt-dashboard.com";
     private static final String TEMPERATURE_TOPIC = "temperature/data";
     private static final double T1 = 5.0, T2 = 15.0;
-    
+    private static final long DT = 10000;
+
+    private enum SystemState { NORMAL, HOT, TOO_HOT, ALARM }
     private CommChannel serialChannel;
     private MqttClient client;
     private DataService dataService;
+    private SystemState currentState = SystemState.NORMAL;
+    private long tooHotStartTime = 0;
 
     public MQTTAgent(DataService dataService) {
         this.dataService = dataService;
@@ -41,9 +45,30 @@ public class MQTTAgent extends AbstractVerticle {
         }
     }
 
+    private void updateSystemState(double temp) {
+        if (temp < T1) {
+            currentState = SystemState.NORMAL;
+        } else if (temp <= T2) {
+            currentState = SystemState.HOT;
+        } else {
+            if (currentState != SystemState.TOO_HOT) {
+                tooHotStartTime = System.currentTimeMillis();
+            }
+            currentState = SystemState.TOO_HOT;
+        }
+        
+        dataService.updateState(
+            currentState.name(),
+            calculateWindowPosition(temp),
+            (currentState == SystemState.TOO_HOT && 
+             System.currentTimeMillis() - tooHotStartTime > DT) ? "ALARM" : "NORMAL"
+        );
+    }
+
     private void handleTemperature(String tempStr) {
         try {
             double temp = Double.parseDouble(tempStr);
+            updateSystemState(temp);
             dataService.addTemperatureData(temp);
             int windowPos = calculateWindowPosition(temp);
             sendToArduino(windowPos, temp);

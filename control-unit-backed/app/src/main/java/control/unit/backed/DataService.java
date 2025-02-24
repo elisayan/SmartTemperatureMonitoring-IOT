@@ -32,11 +32,13 @@ public class DataService extends AbstractVerticle{
         Router router = Router.router(vertx);
         router.route().handler(BodyHandler.create());
         
-        router.get("/api/temperature").handler(this::handleGetTemperatureData);
+        router.get("/api/data").handler(this::handleGetTemperatureData);
         
         router.get("/api/state").handler(this::handleGetCurrentState);
         
         router.post("/api/mode").handler(this::handleModeChange);
+
+        router.post("/api/alarm").handler(this::handleAlarm);
 
         vertx.createHttpServer().requestHandler(router).listen(port);
     }
@@ -80,5 +82,16 @@ public class DataService extends AbstractVerticle{
                 .setStatusCode(400)
                 .end("Invalid request body");
         }
+    }
+
+    private void handleAlarm(RoutingContext ctx) {
+        systemState.alarm = "NORMAL";
+        ctx.response().end("OK");
+    }
+
+    public void updateState(String mode, int windowPos, String alarm) {
+        systemState.mode = mode;
+        systemState.windowPosition = windowPos;
+        systemState.alarm = alarm;
     }
 }
