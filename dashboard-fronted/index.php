@@ -37,6 +37,8 @@
                         <div id="status">
                             <p class="mb-1">Current Mode: <span id="mode" class="fw-bold">AUTO</span></p>
                             <p class="mb-0">Temperature: <span id="temp" class="fw-bold">-</span>°C</p>
+                            <p class="mb-1">Alarm: <span id="alarm" class="fw-bold">NORMAL</span></p>
+                            <button class="btn btn-danger mt-2" onclick="resolveAlarm()">Resolve Alarm</button>
                         </div>
                     </div>
                 </div>

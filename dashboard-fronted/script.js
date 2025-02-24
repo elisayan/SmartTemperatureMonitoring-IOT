@@ -62,6 +62,16 @@ async function setManual() {
     }
 }
 
+async function resolveAlarm() {
+    try {
+        await fetch('/api/alarm', { method: 'POST' });
+    } catch (error) {
+        console.error('Error resolving alarm:', error);
+    }
+}
+
+document.getElementById('alarm').textContent = state.alarm;
+
 setInterval(update, 2000);
 
 update();
