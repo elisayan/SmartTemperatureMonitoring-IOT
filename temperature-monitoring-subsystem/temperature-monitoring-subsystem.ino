@@ -3,7 +3,7 @@
 
 const char* ssid = "TP-LINK_2658";
 const char* password = "66864073";
-const char* mqtt_server = "broker.mqtt-dashboard.com";
+const char* mqtt_server = "test.mosquitto.org";
 const char* topic = "temperature/data";
 
 #define TMP36_PIN 1

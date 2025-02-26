@@ -1,6 +1,9 @@
 package control.unit.backed; 
 
+import io.vertx.ext.web.handler.CorsHandler;
 import io.vertx.core.AbstractVerticle;
+import io.vertx.core.http.HttpHeaders;
+import io.vertx.core.http.HttpMethod;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.Router;
@@ -30,6 +33,14 @@ public class DataService extends AbstractVerticle{
     @Override
     public void start() {
         Router router = Router.router(vertx);
+
+        router.route().handler(CorsHandler.create()
+        .addOrigin("*")
+        .allowedMethod(HttpMethod.GET)
+        .allowedMethod(HttpMethod.POST)
+        .allowedMethod(HttpMethod.OPTIONS)
+        .allowedHeader(HttpHeaders.CONTENT_TYPE.toString()));
+
         router.route().handler(BodyHandler.create());
         
         router.post("/api/data").handler(this::handleAddNewData);
@@ -51,9 +62,9 @@ public class DataService extends AbstractVerticle{
             String place = body.getString("place", "unknown");
             long time = System.currentTimeMillis();
             
-            temperatureData.addFirst(new DataPoint(value, time, place));
+            temperatureData.addLast(new DataPoint(value, time, place));
             if (temperatureData.size() > MAX_SIZE) {
-                temperatureData.removeLast();
+                temperatureData.removeFirst();
             }
             
             ctx.response().setStatusCode(200).end();
@@ -75,9 +86,9 @@ public class DataService extends AbstractVerticle{
     }
     
     public void addTemperatureData(double value) {
-        temperatureData.addFirst(new DataPoint(value, System.currentTimeMillis(), "sensor"));
+        temperatureData.addLast(new DataPoint(value, System.currentTimeMillis(), "sensor"));
         if (temperatureData.size() > MAX_SIZE) {
-            temperatureData.removeLast();
+            temperatureData.removeFirst();
         }
     }
 
