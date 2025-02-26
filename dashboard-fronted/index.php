@@ -37,7 +37,7 @@
                         <div id="status">
                             <p class="mb-1">Current Mode: <span id="mode" class="fw-bold">AUTO</span></p>
                             <p class="mb-0">Window: <span id="window" class="fw-bold">-</span>%</p>
-                            <p class="mb-1">Alarm: <span id="alarm" class="fw-bold">NORMAL</span></p>
+                            <p class="mb-1">State: <span id="state" class="fw-bold">NORMAL</span></p>
                             <button class="btn btn-danger mt-2" onclick="resolveAlarm()">Resolve Alarm</button>
                         </div>
                     </div>

@@ -44,7 +44,7 @@ async function update() {
         const state = await stateRes.json();
         document.getElementById('mode').textContent = state.mode;
         document.getElementById('window').textContent = state.window.toFixed(2);
-        document.getElementById('alarm').textContent = state.alarm;
+        document.getElementById('state').textContent = state.state;
     } catch (error) {
         console.error('Error updating data:', error);
     }
