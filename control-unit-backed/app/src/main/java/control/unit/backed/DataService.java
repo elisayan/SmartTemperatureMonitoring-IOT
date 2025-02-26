@@ -27,7 +27,7 @@ public class DataService extends AbstractVerticle{
     private static class SystemState {
         String mode = "AUTOMATIC";
         int windowPosition = 0;
-        String alarm = "NORMAL";
+        String state = "NORMAL";
     }
 
     @Override
@@ -49,8 +49,6 @@ public class DataService extends AbstractVerticle{
         router.get("/api/state").handler(this::handleGetCurrentState);
         
         router.post("/api/mode").handler(this::handleModeChange);
-
-        router.post("/api/alarm").handler(this::handleAlarm);
 
         vertx.createHttpServer().requestHandler(router).listen(port);
     }
@@ -96,7 +94,7 @@ public class DataService extends AbstractVerticle{
         JsonObject state = new JsonObject()
             .put("mode", systemState.mode)
             .put("window", systemState.windowPosition)
-            .put("alarm", systemState.alarm);
+            .put("state", systemState.state);
         
         ctx.response().end(state.encodePrettily());
     }
@@ -114,14 +112,8 @@ public class DataService extends AbstractVerticle{
         }
     }
 
-    private void handleAlarm(RoutingContext ctx) {
-        systemState.alarm = "NORMAL";
-        ctx.response().end("OK");
-    }
-
-    public void updateState(String mode, int windowPos, String alarm) {
-        systemState.mode = mode;
+    public void updateState(int windowPos, String state) {
         systemState.windowPosition = windowPos;
-        systemState.alarm = alarm;
+        systemState.state = state;
     }
 }

@@ -7,10 +7,10 @@ public class MQTTAgent extends AbstractVerticle {
     private static final String BROKER_ADDRESS = "test.mosquitto.org";
     private static final String TEMPERATURE_TOPIC = "temperature/data";
     private static final double T1 = 5.0, T2 = 15.0;
-    private static final long DT = 10000;
+    private static final long DT = 5000;
 
     private enum SystemState { NORMAL, HOT, TOO_HOT, ALARM }
-    private CommChannel serialChannel;
+    private SerialCommChannel serialChannel;
     private MqttClient client;
     private DataService dataService;
     private SystemState currentState = SystemState.NORMAL;
@@ -58,10 +58,9 @@ public class MQTTAgent extends AbstractVerticle {
         }
         
         dataService.updateState(
-            currentState.name(),
             calculateWindowPosition(temp),
             (currentState == SystemState.TOO_HOT && 
-             System.currentTimeMillis() - tooHotStartTime > DT) ? "ALARM" : "NORMAL"
+             System.currentTimeMillis() - tooHotStartTime > DT) ? "ALARM" : currentState.name()
         );
     }
 
@@ -86,7 +85,6 @@ public class MQTTAgent extends AbstractVerticle {
     private void sendToArduino(int pos, double temp) {
         String cmd = String.format("TEMP:%.2f,POS:%d\n", temp, pos);
         serialChannel.sendMsg(cmd);
-        System.out.println("send temperature");
     }
 
     @Override
