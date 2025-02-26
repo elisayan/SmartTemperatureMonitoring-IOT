@@ -7,8 +7,8 @@ const char* mqtt_server = "test.mosquitto.org";
 const char* topic = "temperature/data";
 
 #define TMP36_PIN 1
-#define GREEN_LED 6
-#define RED_LED 7
+#define RED_LED 6
+#define GREEN_LED 7
 
 #define MSG_BUFFER_SIZE 50
 char msg[MSG_BUFFER_SIZE];

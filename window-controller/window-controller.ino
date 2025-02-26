@@ -31,6 +31,7 @@ void loop() {
     if (input.startsWith("POS:")) {
       windowPosition = input.substring(4).toInt();
       windowServo.write(windowPosition);
+      Serial.println(windowPosition);
     } else if (input.startsWith("TEMP:")) {
       currentTemperature = input.substring(5).toFloat();
     } else if (input.startsWith("MODE:")) {
@@ -53,6 +54,7 @@ void loop() {
     int potValue = analogRead(POT_PIN);
     windowPosition = map(potValue, 0, 1023, 0, 90);
     windowServo.write(windowPosition);
+    Serial.println("Window: ", windowPosition);
   } else {
     if (Serial.available()) {
       windowPosition = Serial.parseInt();
