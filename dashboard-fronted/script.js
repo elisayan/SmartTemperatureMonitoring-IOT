@@ -43,7 +43,7 @@ async function update() {
         const stateRes = await fetch('http://localhost:8080/api/state');
         const state = await stateRes.json();
         document.getElementById('mode').textContent = state.mode;
-        document.getElementById('temp').textContent = state.window.toFixed(2);
+        document.getElementById('window').textContent = state.window.toFixed(2);
         document.getElementById('alarm').textContent = state.alarm;
     } catch (error) {
         console.error('Error updating data:', error);
