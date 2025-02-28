@@ -17,11 +17,13 @@ public class DataService extends AbstractVerticle{
     private static final int MAX_SIZE = 50;
     private LinkedList<DataPoint> temperatureData;
     private SystemState systemState;
+    private SerialCommChannel serialChannel;
 
-    public DataService(int port) {
+    public DataService(int port, SerialCommChannel serialChannel) {
         temperatureData = new LinkedList<>();
         systemState = new SystemState();
         this.port = port;
+        this.serialChannel = serialChannel;
     }
 
     private static class SystemState {
@@ -102,13 +104,13 @@ public class DataService extends AbstractVerticle{
     private void handleModeChange(RoutingContext ctx) {
         JsonObject body = ctx.body().asJsonObject();
         if (body != null) {
-            systemState.mode = body.getString("mode");
-            systemState.windowPosition = body.getInteger("position");
+            String mode = body.getString("mode");
+            int position = body.getInteger("position");
+            serialChannel.sendMsg("MODE:" + mode);
+            serialChannel.sendMsg("POS:" + position);
             ctx.response().end("OK");
         } else {
-            ctx.response()
-                .setStatusCode(400)
-                .end("Invalid request body");
+            ctx.response().setStatusCode(400).end("Invalid request body");
         }
     }
 

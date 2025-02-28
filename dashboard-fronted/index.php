@@ -31,7 +31,7 @@
                         <h2 class="card-title">Controls</h2>
                         <div class="mb-3">
                             <label for="slider" class="form-label">Window Position:</label>
-                            <input type="range" class="form-range" id="slider" min="0" max="100">
+                            <input type="range" class="form-range" id="slider" min="0" max="100" value="0"  >
                         </div>
                         <button class="btn btn-primary w-100 mb-3" onclick="setManual()">Manual Mode</button>
                         <div id="status">

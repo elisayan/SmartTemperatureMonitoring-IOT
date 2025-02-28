@@ -83,8 +83,12 @@ public class MQTTAgent extends AbstractVerticle {
     }
 
     private void sendToArduino(int pos, double temp) {
-        String cmd = String.format("TEMP:%.2f,POS:%d\n", temp, pos);
-        serialChannel.sendMsg(cmd);
+        String mes1 = String.format("TEMP:%.2f \n", temp);
+        String mes2 = String.format("POS:%d \n", pos);
+        serialChannel.sendMsg(mes1);
+        serialChannel.sendMsg(mes2);
+        System.out.println(mes1);
+        System.out.println(mes2);
     }
 
     @Override

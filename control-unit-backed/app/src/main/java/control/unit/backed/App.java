@@ -4,10 +4,10 @@ import io.vertx.core.Vertx;
 
 public class App {
 
-    public static void main(String[] args) {
-        //System.out.println("Hello World");
+    public static void main(String[] args) throws Exception {
         Vertx vertx = Vertx.vertx();
-        DataService dataService = new DataService(8080);
+        SerialCommChannel serialChannel = new SerialCommChannel("COM3", 9600);
+        DataService dataService = new DataService(8080, serialChannel);
         MQTTAgent mqttAgent = new MQTTAgent(dataService);
         vertx.deployVerticle(dataService);
         vertx.deployVerticle(mqttAgent);
