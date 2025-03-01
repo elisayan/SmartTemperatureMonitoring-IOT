@@ -19,7 +19,7 @@ public class DataService extends AbstractVerticle{
     private SystemState systemState;
     private SerialCommChannel serialChannel;
 
-    public DataService(int port, SerialCommChannel serialChannel) {
+    public DataService(int port, SerialCommChannel serialChannel) throws Exception {
         temperatureData = new LinkedList<>();
         systemState = new SystemState();
         this.port = port;

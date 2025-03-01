@@ -66,7 +66,8 @@ void loop() {
   if (digitalRead(BUTTON_PIN) == HIGH) {
     delay(200);
     manualMode = !manualMode;
-    MsgService.sendMsg("MODE:" + (manualMode ? "MANUAL" : "AUTOMATIC"));
+    String modeMessage = "MODE:" + String(manualMode ? "MANUAL" : "AUTOMATIC");
+    MsgService.sendMsg(modeMessage);
     updateDisplay();
     delay(1000);
   }

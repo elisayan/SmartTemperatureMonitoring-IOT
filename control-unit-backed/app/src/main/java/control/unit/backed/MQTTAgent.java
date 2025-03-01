@@ -16,15 +16,14 @@ public class MQTTAgent extends AbstractVerticle {
     private SystemState currentState = SystemState.NORMAL;
     private long tooHotStartTime = 0;
 
-    public MQTTAgent(DataService dataService) {
+    public MQTTAgent(DataService dataService, SerialCommChannel serialChannel) {
         this.dataService = dataService;
+        this.serialChannel = serialChannel;
     }
 
     @Override
     public void start() {
-        try {
-            serialChannel = new SerialCommChannel("COM3", 9600);
-            
+        try {            
             client = MqttClient.create(vertx);
             client.connect(1883, BROKER_ADDRESS, c -> {
                 if (c.succeeded()) {

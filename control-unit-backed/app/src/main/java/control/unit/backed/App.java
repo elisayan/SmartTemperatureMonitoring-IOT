@@ -8,7 +8,7 @@ public class App {
         Vertx vertx = Vertx.vertx();
         SerialCommChannel serialChannel = new SerialCommChannel("COM3", 9600);
         DataService dataService = new DataService(8080, serialChannel);
-        MQTTAgent mqttAgent = new MQTTAgent(dataService);
+        MQTTAgent mqttAgent = new MQTTAgent(dataService, serialChannel);
         vertx.deployVerticle(dataService);
         vertx.deployVerticle(mqttAgent);
     }
