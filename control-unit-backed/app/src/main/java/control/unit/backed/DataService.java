@@ -52,6 +52,8 @@ public class DataService extends AbstractVerticle{
         
         router.post("/api/mode").handler(this::handleModeChange);
 
+        System.out.println("START");
+
         vertx.createHttpServer().requestHandler(router).listen(port);
     }
 
@@ -106,8 +108,10 @@ public class DataService extends AbstractVerticle{
         if (body != null) {
             String mode = body.getString("mode");
             int position = body.getInteger("position");
-            serialChannel.sendMsg("MODE:" + mode);
+            serialChannel.sendMsg(mode);
             serialChannel.sendMsg("POS:" + position);
+            systemState.mode = mode;
+            systemState.windowPosition = position;
             ctx.response().end("OK");
         } else {
             ctx.response().setStatusCode(400).end("Invalid request body");

@@ -56,7 +56,7 @@ async function setManual() {
         await fetch('http://localhost:8080/api/mode', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ mode: "MANUAL", position: parseInt(pos) })
+            body: JSON.stringify({ mode: "MANUAL", position: parseInt(pos), source: "Dashboard" })
         });
     } catch (error) {
         console.error('Error setting manual mode:', error);

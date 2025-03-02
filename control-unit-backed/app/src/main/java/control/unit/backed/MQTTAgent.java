@@ -86,8 +86,6 @@ public class MQTTAgent extends AbstractVerticle {
         String mes2 = String.format("POS:%d \n", pos);
         serialChannel.sendMsg(mes1);
         serialChannel.sendMsg(mes2);
-        System.out.println(mes1);
-        System.out.println(mes2);
     }
 
     @Override

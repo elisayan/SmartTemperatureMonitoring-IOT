@@ -20,6 +20,10 @@ void setup() {
   lcd.init();
   lcd.backlight();
   lcd.print("Mode: AUTOMATIC");
+  lcd.setCursor(0, 1);
+  lcd.print("Window: ");
+  lcd.print(windowPosition);
+  lcd.print("%");
 
   windowServo.attach(SERVO_PIN);
   windowServo.write(0);
@@ -54,9 +58,14 @@ void loop() {
       windowServo.write(windowPosition);
     } else if (content.startsWith("TEMP:")) {
       currentTemperature = content.substring(5).toFloat();
-    } else if (content.startsWith("MODE:")) {
-      String mode = content.substring(5);
-      manualMode = (mode == "MANUAL");
+    // } else if (content.startsWith("MODE:")) {
+    //   String mode = content.substring(5);
+    //   manualMode = (mode == "MANUAL");
+    // }
+    } else if (content == "MANUAL") {
+      manualMode = true;
+    } else if (content == "AUTOMATIC"){
+      manualMode = false;
     }
 
     delete msg;
