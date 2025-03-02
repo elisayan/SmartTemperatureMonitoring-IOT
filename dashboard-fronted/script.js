@@ -31,6 +31,17 @@ const chart = new Chart(ctx, {
     }
 });
 
+function updateButtonText(mode) {
+    const manualButton = document.querySelector('button[onclick="setManual()"]');
+    if (mode === "MANUAL") {
+        manualButton.textContent = "Switch to Automatic Mode";
+        manualButton.onclick = setAutomatic;
+    } else {
+        manualButton.textContent = "Switch to Manual Mode";
+        manualButton.onclick = setManual;
+    }
+}
+
 async function update() {
     try {
         const res = await fetch('http://localhost:8080/api/data');
@@ -45,6 +56,8 @@ async function update() {
         document.getElementById('mode').textContent = state.mode;
         document.getElementById('window').textContent = state.window.toFixed(2);
         document.getElementById('state').textContent = state.state;
+
+        updateButtonText(state.mode);
     } catch (error) {
         console.error('Error updating data:', error);
     }
@@ -60,6 +73,18 @@ async function setManual() {
         });
     } catch (error) {
         console.error('Error setting manual mode:', error);
+    }
+}
+
+async function setAutomatic() {
+    try {
+        await fetch('http://localhost:8080/api/mode', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ mode: "AUTOMATIC", position: 0, source: "Dashboard" })
+        });
+    } catch (error) {
+        console.error('Error setting automatic mode:', error);
     }
 }
 
