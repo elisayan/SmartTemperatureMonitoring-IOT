@@ -52,8 +52,6 @@ public class DataService extends AbstractVerticle {
         
         router.post("/api/mode").handler(this::handleModeChange);
 
-        System.out.println("START");
-
         vertx.createHttpServer().requestHandler(router).listen(port);
     }
 
