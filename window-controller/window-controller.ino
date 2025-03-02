@@ -58,14 +58,9 @@ void loop() {
       windowServo.write(windowPosition);
     } else if (content.startsWith("TEMP:")) {
       currentTemperature = content.substring(5).toFloat();
-    // } else if (content.startsWith("MODE:")) {
-    //   String mode = content.substring(5);
-    //   manualMode = (mode == "MANUAL");
-    // }
-    } else if (content == "MANUAL") {
-      manualMode = true;
-    } else if (content == "AUTOMATIC"){
-      manualMode = false;
+    } else if (content.startsWith("MODE:")) {
+      String mode = content.substring(5);
+      manualMode = (mode == "MANUAL");
     }
 
     delete msg;
@@ -77,6 +72,7 @@ void loop() {
     manualMode = !manualMode;
     String modeMessage = "MODE:" + String(manualMode ? "MANUAL" : "AUTOMATIC");
     MsgService.sendMsg(modeMessage);
+    MsgService.sendMsg("SOURCE:Arduino");
     updateDisplay();
     delay(1000);
   }
@@ -86,6 +82,7 @@ void loop() {
     windowPosition = map(potValue, 0, 1023, 0, 90);
     windowServo.write(windowPosition);
     MsgService.sendMsg("POS:" + String(windowPosition));
+    MsgService.sendMsg("SOURCE:Arduino");
     updateDisplay();
   }
 

@@ -11,13 +11,13 @@ import io.vertx.ext.web.RoutingContext;
 import io.vertx.ext.web.handler.BodyHandler;
 import java.util.LinkedList;
 
-public class DataService extends AbstractVerticle{
-
+public class DataService extends AbstractVerticle {
     private int port;
     private static final int MAX_SIZE = 50;
     private LinkedList<DataPoint> temperatureData;
     private SystemState systemState;
     private SerialCommChannel serialChannel;
+    private String lastManualCommandSource = null;
 
     public DataService(int port, SerialCommChannel serialChannel) throws Exception {
         temperatureData = new LinkedList<>();
@@ -98,8 +98,8 @@ public class DataService extends AbstractVerticle{
         JsonObject state = new JsonObject()
             .put("mode", systemState.mode)
             .put("window", systemState.windowPosition)
-            .put("state", systemState.state);
-        
+            .put("state", systemState.state)
+            .put("lastManualCommandSource", lastManualCommandSource);
         ctx.response().end(state.encodePrettily());
     }
 
@@ -108,6 +108,14 @@ public class DataService extends AbstractVerticle{
         if (body != null) {
             String mode = body.getString("mode");
             int position = body.getInteger("position");
+            String source = body.getString("source", "Dashboard");
+            
+            if (mode.equals("MANUAL")) {
+                lastManualCommandSource = source;
+            } else if (mode.equals("AUTOMATIC")) {
+                lastManualCommandSource = null;
+            }
+            
             serialChannel.sendMsg(mode);
             serialChannel.sendMsg("POS:" + position);
             systemState.mode = mode;
