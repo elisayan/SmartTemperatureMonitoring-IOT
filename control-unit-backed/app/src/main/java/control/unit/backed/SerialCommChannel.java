@@ -1,33 +1,45 @@
 package control.unit.backed;
 
-import java.util.concurrent.*;
-import jssc.*;
+import io.vertx.core.Vertx;
+import jssc.SerialPort;
+import jssc.SerialPortException;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.ArrayBlockingQueue;
 
-public class SerialCommChannel implements CommChannel, SerialPortEventListener {
+public class SerialCommChannel implements CommChannel {
     private final SerialPort serialPort;
     private final BlockingQueue<String> queue;
-    private StringBuffer currentMsg = new StringBuffer();
+    private final Vertx vertx;
 
-    public SerialCommChannel(String port, int rate) throws Exception {
-        queue = new ArrayBlockingQueue<>(100);
-        serialPort = new SerialPort(port);
-        serialPort.openPort();
-        serialPort.setParams(rate, SerialPort.DATABITS_8, SerialPort.STOPBITS_1, SerialPort.PARITY_NONE);
-        serialPort.addEventListener(this);
+    public SerialCommChannel(Vertx vertx, String port, int rate) throws Exception {
+        this.vertx = vertx;
+        this.queue = new ArrayBlockingQueue<>(1000);
+        this.serialPort = new SerialPort(port);
+        this.serialPort.openPort();
+        this.serialPort.setParams(rate, 8, 1, 0);
+        this.serialPort.addEventListener((event) -> handleSerialEvent(event));
     }
 
     @Override
     public void sendMsg(String msg) {
-        try {
-            serialPort.writeBytes((msg + "\n").getBytes());
-        } catch (SerialPortException ex) {
-            ex.printStackTrace();
-        }
+        vertx.executeBlocking(promise -> {
+            try {
+                serialPort.writeBytes((msg + "\n").getBytes());
+                promise.complete();
+            } catch (SerialPortException ex) {
+                promise.fail(ex);
+            }
+        }, false).onComplete(result -> {
+            if (result.failed()) {
+                System.err.println("Errore invio messaggio: " + result.cause().getMessage());
+            }
+        });
     }
 
     @Override
     public String receiveMsg() throws InterruptedException {
-        return queue.take();
+        return queue.poll(1, TimeUnit.SECONDS);
     }
 
     @Override
@@ -35,33 +47,32 @@ public class SerialCommChannel implements CommChannel, SerialPortEventListener {
         return !queue.isEmpty();
     }
 
+    private void handleSerialEvent(jssc.SerialPortEvent event) {
+        if (event.isRXCHAR()) {
+            vertx.executeBlocking(promise -> {
+                try {
+                    String msg = serialPort.readString(event.getEventValue());
+                    boolean added = queue.offer(msg.replaceAll("\r", ""));
+                    if (!added) {
+                        System.err.println("Coda piena: messaggio scartato.");
+                    }
+                    promise.complete();
+                } catch (Exception ex) {
+                    promise.fail(ex);
+                }
+            }).onComplete(result -> {
+                if (result.failed()) {
+                    System.err.println("Errore lettura messaggio: " + result.cause().getMessage());
+                }
+            });
+        }
+    }
+
     public void close() {
         try {
             serialPort.closePort();
         } catch (SerialPortException ex) {
             ex.printStackTrace();
-        }
-    }
-
-    public void serialEvent(SerialPortEvent event) {
-        if (event.isRXCHAR()) {
-            try {
-                String msg = serialPort.readString(event.getEventValue());
-                currentMsg.append(msg.replaceAll("\r", ""));
-
-                while (true) {
-                    String msg2 = currentMsg.toString();
-                    int index = msg2.indexOf("\n");
-                    if (index >= 0) {
-                        queue.put(msg2.substring(0, index));
-                        currentMsg = new StringBuffer(msg2.substring(index + 1));
-                    } else {
-                        break;
-                    }
-                }
-            } catch (Exception ex) {
-                ex.printStackTrace();
-            }
         }
     }
 }
