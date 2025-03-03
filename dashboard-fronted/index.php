@@ -33,7 +33,7 @@
                             <label for="slider" class="form-label">Window Position:</label>
                             <input type="range" class="form-range" id="slider" min="0" max="100" value="0"  >
                         </div>
-                        <button class="btn btn-primary w-100 mb-3" onclick="setManual()">Manual Mode</button>
+                        <button class="btn btn-primary w-100 mb-3" id="modeButton">Manual Mode</button>
                         <div id="status">
                             <p class="mb-1">Current Mode: <span id="mode" class="fw-bold">AUTO</span></p>
                             <p class="mb-0">Window: <span id="window" class="fw-bold">-</span>%</p>

@@ -31,14 +31,41 @@ const chart = new Chart(ctx, {
     }
 });
 
+const modeButton = document.getElementById('modeButton');
+const slider = document.getElementById('slider');
+
 function updateButtonText(mode) {
-    const manualButton = document.querySelector('button[onclick="setManual()"]');
     if (mode === "MANUAL") {
-        manualButton.textContent = "Switch to Automatic Mode";
-        manualButton.onclick = setAutomatic;
+        modeButton.textContent = "Switch to Automatic Mode";
+        modeButton.onclick = setAutomatic;
     } else {
-        manualButton.textContent = "Switch to Manual Mode";
-        manualButton.onclick = setManual;
+        modeButton.textContent = "Switch to Manual Mode";
+        modeButton.onclick = setManual;
+    }
+}
+
+modeButton.addEventListener('click', function () {
+    if (modeButton.onclick) {
+        modeButton.onclick();
+    }
+});
+
+slider.addEventListener('input', function () {
+    const currentMode = document.getElementById('mode').textContent;
+    if (currentMode === "MANUAL") {
+        updateWindowPosition(slider.value);
+    }
+});
+
+async function updateWindowPosition(position) {
+    try {
+        await fetch('http://localhost:8080/api/mode', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ mode: "MANUAL", position: parseInt(position), source: "Dashboard" })
+        });
+    } catch (error) {
+        console.error('Error updating window position:', error);
     }
 }
 
@@ -56,7 +83,6 @@ async function update() {
         document.getElementById('mode').textContent = state.mode;
         document.getElementById('window').textContent = state.window.toFixed(2);
         document.getElementById('state').textContent = state.state;
-
         updateButtonText(state.mode);
     } catch (error) {
         console.error('Error updating data:', error);
@@ -64,7 +90,7 @@ async function update() {
 }
 
 async function setManual() {
-    const pos = document.getElementById('slider').value;
+    const pos = slider.value;
     try {
         await fetch('http://localhost:8080/api/mode', {
             method: 'POST',
@@ -97,5 +123,4 @@ async function resolveAlarm() {
 }
 
 setInterval(update, 2000);
-
 update();
