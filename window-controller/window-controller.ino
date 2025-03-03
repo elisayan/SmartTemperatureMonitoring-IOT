@@ -14,7 +14,7 @@ int windowPosition = 0;
 float currentTemperature = 0.0;
 
 void setup() {
-  Serial.begin(9600);
+  Serial.begin(115200);
   MsgService.init();
 
   lcd.init();
@@ -66,6 +66,8 @@ void loop() {
     delete msg;
     updateDisplay();
   }
+
+  Serial.println("NOT");
 
   if (digitalRead(BUTTON_PIN) == HIGH) {
     delay(200);
