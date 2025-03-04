@@ -4,7 +4,7 @@ public interface CommChannel {
 
     void sendMsg(String msg);
 
-    String receiveMsg() throws InterruptedException;
+    String receiveMsg();
 
     boolean isMsgAvailable();
 }

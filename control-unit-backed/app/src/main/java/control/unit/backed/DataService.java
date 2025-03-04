@@ -9,27 +9,27 @@ import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.Router;
 import io.vertx.ext.web.RoutingContext;
 import io.vertx.ext.web.handler.BodyHandler;
-import java.util.LinkedList;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 public class DataService extends AbstractVerticle {
     private int port;
     private static final int MAX_SIZE = 50;
-    private LinkedList<DataPoint> temperatureData;
+    private CopyOnWriteArrayList<DataPoint> temperatureData;
     private SystemState systemState;
     private SerialCommChannel serialChannel;
     private String lastManualCommandSource = null;
 
     public DataService(int port, SerialCommChannel serialChannel) throws Exception {
-        temperatureData = new LinkedList<>();
+        temperatureData = new CopyOnWriteArrayList<>();
         systemState = new SystemState();
         this.port = port;
         this.serialChannel = serialChannel;
     }
 
     private static class SystemState {
-        String mode = "AUTOMATIC";
-        int windowPosition = 0;
-        String state = "NORMAL";
+        volatile String mode = "AUTOMATIC";
+        volatile int windowPosition = 0;
+        volatile String state = "NORMAL";
     }
 
     @Override
@@ -53,6 +53,25 @@ public class DataService extends AbstractVerticle {
         router.post("/api/mode").handler(this::handleModeChange);
 
         vertx.createHttpServer().requestHandler(router).listen(port);
+
+        vertx.setPeriodic(100, timerId -> {
+            while (serialChannel.isMsgAvailable()) {
+                String msg = serialChannel.receiveMsg();
+                if (msg != null) {
+                    handleSerialMessage(msg);
+                }
+            }
+        });
+    }
+
+    private void handleSerialMessage(String msg) {
+        if (msg.startsWith("TEMP:")) {
+            double temp = Double.parseDouble(msg.substring(5));
+            addTemperatureData(temp);
+        } else if (msg.startsWith("POS:")) {
+            int pos = Integer.parseInt(msg.substring(4));
+            systemState.windowPosition = pos;
+        }
     }
 
     private void handleAddNewData(RoutingContext ctx) {
@@ -75,11 +94,11 @@ public class DataService extends AbstractVerticle {
 
     private void handleGetTemperatureData(RoutingContext ctx) {
         JsonArray arr = new JsonArray();
-        for (DataPoint p : temperatureData) {
+        temperatureData.forEach(p -> {
             arr.add(new JsonObject()
                 .put("time", p.getTime())
                 .put("value", p.getValue()));
-        }
+        });
         ctx.response()
             .putHeader("content-type", "application/json")
             .end(arr.encodePrettily());
@@ -101,24 +120,32 @@ public class DataService extends AbstractVerticle {
         ctx.response().end(state.encodePrettily());
     }
 
+    @SuppressWarnings("deprecation")
     private void handleModeChange(RoutingContext ctx) {
         JsonObject body = ctx.body().asJsonObject();
         if (body != null) {
             String mode = body.getString("mode");
             int position = body.getInteger("position");
             String source = body.getString("source", "Dashboard");
-            
-            if (mode.equals("MANUAL")) {
-                lastManualCommandSource = source;
-            } else if (mode.equals("AUTOMATIC")) {
-                lastManualCommandSource = null;
-            }
-            
-            serialChannel.sendMsg("MODE:" + mode);
-            serialChannel.sendMsg("POS:" + position);
-            systemState.mode = mode;
-            systemState.windowPosition = position;
-            ctx.response().end("OK");
+    
+            vertx.executeBlocking(promise -> {
+                serialChannel.sendMsg("MODE:" + mode);
+                serialChannel.sendMsg("POS:" + position);
+                promise.complete();
+            }, false, res -> {
+                if (res.succeeded()) {
+                    systemState.mode = mode;
+                    systemState.windowPosition = position;
+                    if (mode.equals("MANUAL")) {
+                        lastManualCommandSource = source;
+                    } else {
+                        lastManualCommandSource = null;
+                    }
+                    ctx.response().end("OK");
+                } else {
+                    ctx.response().setStatusCode(500).end("Errore interno");
+                }
+            });
         } else {
             ctx.response().setStatusCode(400).end("Invalid request body");
         }

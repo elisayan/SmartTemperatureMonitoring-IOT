@@ -3,18 +3,18 @@ package control.unit.backed;
 import io.vertx.core.Vertx;
 import jssc.SerialPort;
 import jssc.SerialPortException;
-import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.Queue;
 
 public class SerialCommChannel implements CommChannel {
     private final SerialPort serialPort;
-    private final BlockingQueue<String> queue;
+    private final Queue<String> queue;
     private final Vertx vertx;
+    private StringBuffer currentMsg = new StringBuffer();
 
     public SerialCommChannel(Vertx vertx, String port, int rate) throws Exception {
         this.vertx = vertx;
-        this.queue = new ArrayBlockingQueue<>(1000);
+        this.queue = new ConcurrentLinkedQueue<>();
         this.serialPort = new SerialPort(port);
         this.serialPort.openPort();
         this.serialPort.setParams(rate, 8, 1, 0);
@@ -30,16 +30,16 @@ public class SerialCommChannel implements CommChannel {
             } catch (SerialPortException ex) {
                 promise.fail(ex);
             }
-        }, false).onComplete(result -> {
-            if (result.failed()) {
-                System.err.println("Errore invio messaggio: " + result.cause().getMessage());
+        }, false, res -> {
+            if (res.failed()) {
+                System.err.println("Errore invio: " + res.cause().getMessage());
             }
         });
     }
 
     @Override
-    public String receiveMsg() throws InterruptedException {
-        return queue.poll(1, TimeUnit.SECONDS);
+    public String receiveMsg() {
+        return queue.poll();
     }
 
     @Override
@@ -52,20 +52,30 @@ public class SerialCommChannel implements CommChannel {
             vertx.executeBlocking(promise -> {
                 try {
                     String msg = serialPort.readString(event.getEventValue());
-                    boolean added = queue.offer(msg.replaceAll("\r", ""));
-                    if (!added) {
-                        System.err.println("Coda piena: messaggio scartato.");
-                    }
+                    msg = msg.replaceAll("\r", "");
+                    currentMsg.append(msg);
+                    processBuffer();
                     promise.complete();
                 } catch (Exception ex) {
                     promise.fail(ex);
                 }
-            }).onComplete(result -> {
-                if (result.failed()) {
-                    System.err.println("Errore lettura messaggio: " + result.cause().getMessage());
+            }, false, res -> {
+                if (res.failed()) {
+                    System.err.println("Errore lettura: " + res.cause().getMessage());
                 }
             });
         }
+    }
+
+    private void processBuffer() {
+        String buffer = currentMsg.toString();
+        int index;
+        while ((index = buffer.indexOf("\n")) >= 0) {
+            String message = buffer.substring(0, index);
+            queue.offer(message); // Non bloccante
+            buffer = buffer.substring(index + 1);
+        }
+        currentMsg = new StringBuffer(buffer);
     }
 
     public void close() {
