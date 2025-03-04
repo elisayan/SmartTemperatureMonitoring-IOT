@@ -114,7 +114,7 @@ public class DataService extends AbstractVerticle {
                 lastManualCommandSource = null;
             }
             
-            serialChannel.sendMsg(mode);
+            serialChannel.sendMsg("MODE:" + mode);
             serialChannel.sendMsg("POS:" + position);
             systemState.mode = mode;
             systemState.windowPosition = position;
