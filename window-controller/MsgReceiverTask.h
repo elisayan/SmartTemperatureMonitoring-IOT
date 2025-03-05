@@ -5,15 +5,15 @@
 #include "MsgService.h"
 
 class MsgReceiverTask : public Task {
-    MsgServiceClass& msgService;
-    bool& manualMode;
-    int& windowPosition;
-    float& currentTemperature;
+  MsgServiceClass& msgService;
+  bool& manualMode;
+  int& windowPosition;
+  float& currentTemperature;
 
 public:
-    MsgReceiverTask(MsgServiceClass& service, bool& mode, int& pos, float& temp);
-    void init(int period) override;
-    void tick() override;
+  MsgReceiverTask(MsgServiceClass& service, bool& mode, int& pos, float& temp);
+  void init(int period) override;
+  void tick() override;
 };
 
 #endif

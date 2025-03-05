@@ -5,10 +5,8 @@
 #include <Servo.h>
 
 class ServoMotor : public Window {
-
 public:
   ServoMotor(int pin);
-
   void on();
   void setPosition(int angle);
   void off();
