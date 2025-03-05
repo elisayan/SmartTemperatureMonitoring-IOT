@@ -7,5 +7,5 @@ Potentiometer::Potentiometer(int pin) {
 }
 
 int Potentiometer::getValue() {
-    return analogRead(POTENTIOMETER_PIN);
+    return analogRead(POT_PIN);
 }

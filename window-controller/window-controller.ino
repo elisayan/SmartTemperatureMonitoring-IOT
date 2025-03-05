@@ -1,92 +1,20 @@
 #include <LiquidCrystal_I2C.h>
 #include <Servo.h>
 #include "MsgService.h"
+#include "Scheduler.h"
+#include "Config.h"
 
-#define SERVO_PIN 9
-#define BUTTON_PIN 7
-#define POT_PIN A0
-
+Scheduler sched;
 LiquidCrystal_I2C lcd(0x27, 20, 4);
-Servo windowServo;
-
-bool manualMode = false;
-int windowPosition = 0;
-float currentTemperature = 0.0;
 
 void setup() {
   Serial.begin(115200);
   MsgService.init();
+  sched.init(100);
 
-  lcd.init();
-  lcd.backlight();
-  lcd.print("Mode: AUTOMATIC");
-  lcd.setCursor(0, 1);
-  lcd.print("Window: ");
-  lcd.print(windowPosition);
-  lcd.print("%");
-
-  windowServo.attach(SERVO_PIN);
-  windowServo.write(0);
-
-  pinMode(BUTTON_PIN, INPUT);
-}
-
-void updateDisplay() {
-  lcd.clear();
-  lcd.setCursor(0, 0);
-  lcd.print("Mode: ");
-  lcd.print(manualMode ? "MANUAL" : "AUTOMATIC");
-
-  lcd.setCursor(0, 1);
-  lcd.print("Window: ");
-  lcd.print(windowPosition);
-  lcd.print("%");
-
-  lcd.setCursor(0, 2);
-  lcd.print("Temp: ");
-  lcd.print(currentTemperature);
-  lcd.print("C");
+  
 }
 
 void loop() {
-  if (MsgService.isMsgAvailable()) {
-    Msg* msg = MsgService.receiveMsg();
-    String content = msg->getContent();
-    
-    if (content.startsWith("POS:")) {
-      windowPosition = content.substring(4).toInt();
-      windowServo.write(windowPosition);
-    } else if (content.startsWith("TEMP:")) {
-      currentTemperature = content.substring(5).toFloat();
-    } else if (content.startsWith("MODE:")) {
-      String mode = content.substring(5);
-      manualMode = (mode == "MANUAL");
-    }
-
-    delete msg;
-    updateDisplay();
-  }
-
-  Serial.println("NOT");
-
-  if (digitalRead(BUTTON_PIN) == HIGH) {
-    delay(200);
-    manualMode = !manualMode;
-    String modeMessage = "MODE:" + String(manualMode ? "MANUAL" : "AUTOMATIC");
-    MsgService.sendMsg(modeMessage);
-    MsgService.sendMsg("SOURCE:Arduino");
-    updateDisplay();
-    delay(1000);
-  }
-
-  if (manualMode) {
-    int potValue = analogRead(POT_PIN);
-    windowPosition = map(potValue, 0, 1023, 0, 90);
-    windowServo.write(windowPosition);
-    MsgService.sendMsg("POS:" + String(windowPosition));
-    MsgService.sendMsg("SOURCE:Arduino");
-    updateDisplay();
-  }
-
-  delay(100);
+  sched.schedule();
 }

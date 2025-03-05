@@ -1,11 +1,10 @@
-#ifndef __SERVO_MOTOR__
-#define __SERVO_MOTOR__
+#ifndef __WINDOW__
+#define __WINDOW__
 
-class ServoMotor {
+class Window {
 
 public:
   virtual void on() = 0;
-  virtual bool isOn() = 0;
   virtual void setPosition(int angle) = 0;
   virtual void off() = 0;
 };
