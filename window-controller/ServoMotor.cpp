@@ -2,26 +2,33 @@
 #include "Arduino.h"
 
 ServoMotor::ServoMotor(int pin) {
+  this->motor = new ServoTimer2();
   this->pin = pin;
 }
 
 void ServoMotor::on() {
-  motor.attach(pin);
+  motor->attach(pin);
+  motor->write(MIN_PULSE);
 }
 
-void ServoMotor::setPosition(int angle) {
-  if (angle > 90) {
-    angle = 90;
-  } else if (angle < -90) {
-    angle = -90;
-  }
+void ServoMotor::setPosition(int percentage) {
+  if (!motor->attached()) return;
 
-  float coeff = (2400.0 - 544.0) / 180.0;
-  int pulseWidth = 544 + (angle + 90) * coeff;
+  percentage = constrain(percentage, 0, 100);
+  currentPercentage = percentage;
 
-  motor.write(pulseWidth);
+  int degrees = map(percentage, 0, 100, 0, 90);
+  int pulseWidth = map(degrees, 0, 90, MIN_PULSE, MAX_PULSE);
+
+  motor->write(pulseWidth);
 }
 
 void ServoMotor::off() {
-  motor.detach();
+  if (motor->attached()) {
+    motor->detach();
+  }
+}
+
+int ServoMotor::getCurrentPercentage() {
+  return currentPercentage;
 }

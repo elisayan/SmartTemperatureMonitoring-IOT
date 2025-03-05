@@ -5,7 +5,7 @@ class Window {
 
 public:
   virtual void on() = 0;
-  virtual void setPosition(int angle) = 0;
+  virtual void setPosition(int percentage) = 0;
   virtual void off() = 0;
 };
 
