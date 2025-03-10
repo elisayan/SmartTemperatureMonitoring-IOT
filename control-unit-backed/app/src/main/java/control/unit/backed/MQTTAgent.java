@@ -4,7 +4,7 @@ import io.vertx.core.AbstractVerticle;
 import io.vertx.mqtt.MqttClient;
 
 public class MQTTAgent extends AbstractVerticle {
-    private static final String BROKER_ADDRESS = "test.mosquitto.org";
+    private static final String BROKER_ADDRESS = "broker.mqtt-dashboard.com";//"test.mosquitto.org";
     private static final String TEMPERATURE_TOPIC = "temperature/data";
     private static final double T1 = 5.0, T2 = 15.0;
     private static final long DT = 5000;

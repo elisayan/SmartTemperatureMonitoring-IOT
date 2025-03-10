@@ -3,24 +3,21 @@
 #include "Config.h"
 #include "TempSensorTMP36.h"
 #include "Led.h"
-#include "FSM.h"
 
 TempSensorTMP36 tempSensor(TEMP_SENSOR_PIN);
 Led greenLed(GREEN_LED_PIN);
 Led redLed(RED_LED_PIN);
-FSM fsm;
 
 const char* SSID = "TP-LINK_2658";
 const char* PASSWORD = "66864073";
-const char* MQTT_SERVER = "test.mosquitto.org";
+const char* MQTT_SERVER = "broker.mqtt-dashboard.com";
 const char* TOPIC = "temperature/data";
 
 WiFiClient espClient;
 PubSubClient mqttClient(espClient);
 
-SystemState currentState = NORMAL;
 unsigned long lastSampleTime = 0;
-unsigned long tooHotStartTime = 0;
+const unsigned long SAMPLING_INTERVAL = 5000;
 
 void setup() {
   Serial.begin(115200);
@@ -31,15 +28,8 @@ void setup() {
 void loop() {
   unsigned long now = millis();
   
-  if(now - lastSampleTime >= fsm.getSamplingInterval()) {
+  if(now - lastSampleTime >= SAMPLING_INTERVAL) {
     float temp = tempSensor.getTemperature();
-    currentState = fsm.getState(temp);
-    
-    if(currentState == TOO_HOT && fsm.checkAlarmCondition(tooHotStartTime)) {
-      currentState = ALARM;
-      handleAlarm();
-    }
-    
     sendMQTT(temp);
     lastSampleTime = now;
   }
@@ -86,29 +76,9 @@ void sendMQTT(float temp) {
   char tempMsg[50];
   snprintf(tempMsg, 50, "%.2f", temp);
   mqttClient.publish(TOPIC, tempMsg);
-
-  if(currentState == ALARM) {
-    mqttClient.publish("system/status", "ALARM_ACTIVE");
-  }
-
-  Serial.print("[MQTT] Invio temperatura: ");
-  Serial.println(temp);
-  
-  if(currentState == ALARM) {
-    Serial.println("[MQTT] Allarme attivato!");
-  }
-}
-
-void handleAlarm() {
-  redLed.blink(500);
-  greenLed.off();
-  
-  mqttClient.publish("system/status", "ALARM_TRIGGERED");
 }
 
 void updateLeds() {
-  if(currentState == ALARM) return;
-  
   if(WiFi.status() == WL_CONNECTED && mqttClient.connected()) {
     greenLed.on();
     redLed.off();
