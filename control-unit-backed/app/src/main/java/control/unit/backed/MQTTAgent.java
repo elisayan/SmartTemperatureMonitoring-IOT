@@ -4,10 +4,10 @@ import io.vertx.core.AbstractVerticle;
 import io.vertx.mqtt.MqttClient;
 
 public class MQTTAgent extends AbstractVerticle {
-    private static final String BROKER_ADDRESS = "broker.mqtt-dashboard.com";//"test.mosquitto.org";
+    private static final String BROKER_ADDRESS = "broker.mqtt-dashboard.com"; // "test.mosquitto.org";
     private static final String TEMPERATURE_TOPIC = "temperature/data";
     private static final double T1 = 5.0, T2 = 15.0;
-    private static final long DT = 5000;
+    private static final long DT = 10000;
 
     private enum SystemState { NORMAL, HOT, TOO_HOT, ALARM }
     private SerialCommChannel serialChannel;
@@ -15,6 +15,9 @@ public class MQTTAgent extends AbstractVerticle {
     private DataService dataService;
     private SystemState currentState = SystemState.NORMAL;
     private long tooHotStartTime = 0;
+
+    private double lastSentTemp = -1;
+    private int lastSentPos = -1;
 
     public MQTTAgent(DataService dataService, SerialCommChannel serialChannel) {
         this.dataService = dataService;
@@ -82,10 +85,20 @@ public class MQTTAgent extends AbstractVerticle {
     }
 
     private void sendToArduino(int pos, double temp) {
-        String mes1 = String.format("TEMP:%.2f \n", temp);
-        String mes2 = String.format("POS:%d \n", pos);
-        serialChannel.sendMsg(mes1);
-        serialChannel.sendMsg(mes2);
+        try {
+            if (temp != lastSentTemp || pos != lastSentPos) {
+                String message = String.format("POS:%d\nTEMP:%.2f\n",pos, temp);
+                serialChannel.sendMsg(message);
+                System.out.println("Sent to Arduino: \n" + message);
+
+                lastSentTemp = temp;
+                lastSentPos = pos;
+            } else {
+                System.out.println("Data unchanged. Skipping send to Arduino.");
+            }
+        } catch (Exception e) {
+            System.err.println("Failed to send message to Arduino: " + e.getMessage());
+        }
     }
 
     @Override

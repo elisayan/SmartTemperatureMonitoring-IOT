@@ -24,7 +24,6 @@ void setup() {
   lcd.init();
   lcd.backlight();
   windowServo.on();
-  windowServo.setPosition(50);
 
   scheduler.init(100);
 

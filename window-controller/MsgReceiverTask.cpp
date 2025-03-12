@@ -13,13 +13,12 @@ void MsgReceiverTask::tick() {
     Msg* msg = msgService.receiveMsg();
     String content = msg->getContent();
 
-    if (content.startsWith("POS:")) {
-      windowPosition = content.substring(4).toInt();
-    } else if (content.startsWith("TEMP:")) {
+    if (content.startsWith("TEMP:")) {
       currentTemperature = content.substring(5).toFloat();
+    } else if (content.startsWith("POS:")) {
+      windowPosition = content.substring(4).toInt();
     } else if (content.startsWith("MODE:")) {
       manualMode = (content.substring(5) == "MANUAL");
     }
-    delete msg;
   }
 }

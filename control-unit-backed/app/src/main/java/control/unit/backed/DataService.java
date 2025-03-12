@@ -1,4 +1,4 @@
-package control.unit.backed; 
+package control.unit.backed;
 
 import io.vertx.ext.web.handler.CorsHandler;
 import io.vertx.core.AbstractVerticle;
@@ -33,32 +33,40 @@ public class DataService extends AbstractVerticle {
     }
 
     @Override
-    public void start() {
+    public void start() throws InterruptedException {
         Router router = Router.router(vertx);
 
         router.route().handler(CorsHandler.create()
-        .addOrigin("*")
-        .allowedMethod(HttpMethod.GET)
-        .allowedMethod(HttpMethod.POST)
-        .allowedMethod(HttpMethod.OPTIONS)
-        .allowedHeader(HttpHeaders.CONTENT_TYPE.toString()));
+                .addOrigin("*")
+                .allowedMethod(HttpMethod.GET)
+                .allowedMethod(HttpMethod.POST)
+                .allowedMethod(HttpMethod.OPTIONS)
+                .allowedHeader(HttpHeaders.CONTENT_TYPE.toString()));
 
         router.route().handler(BodyHandler.create());
-        
+
         router.post("/api/data").handler(this::handleAddNewData);
         router.get("/api/data").handler(this::handleGetTemperatureData);
-        
+
         router.get("/api/state").handler(this::handleGetCurrentState);
-        
+
         router.post("/api/mode").handler(this::handleModeChange);
 
         vertx.createHttpServer().requestHandler(router).listen(port);
 
-        vertx.setPeriodic(100, timerId -> {
+        vertx.createHttpServer().requestHandler(router).listen(port);
+
+        vertx.setPeriodic(20, timerId -> {
             while (serialChannel.isMsgAvailable()) {
-                String msg = serialChannel.receiveMsg();
-                if (msg != null) {
-                    handleSerialMessage(msg);
+                try {
+                    String msg = serialChannel.receiveMsg();
+                    if (msg != null) {
+                        handleSerialMessage(msg);
+                    }
+                } catch (InterruptedException e) {
+                    System.err.println("Thread interrotto durante la ricezione del messaggio: " + e.getMessage());
+                    Thread.currentThread().interrupt();
+                    break;
                 }
             }
         });
@@ -80,12 +88,12 @@ public class DataService extends AbstractVerticle {
             double value = body.getDouble("value");
             String place = body.getString("place", "unknown");
             long time = System.currentTimeMillis();
-            
+
             temperatureData.addLast(new DataPoint(value, time, place));
             if (temperatureData.size() > MAX_SIZE) {
                 temperatureData.removeFirst();
             }
-            
+
             ctx.response().setStatusCode(200).end();
         } else {
             ctx.response().setStatusCode(400).end("Invalid data");
@@ -96,14 +104,14 @@ public class DataService extends AbstractVerticle {
         JsonArray arr = new JsonArray();
         temperatureData.forEach(p -> {
             arr.add(new JsonObject()
-                .put("time", p.getTime())
-                .put("value", p.getValue()));
+                    .put("time", p.getTime())
+                    .put("value", p.getValue()));
         });
         ctx.response()
-            .putHeader("content-type", "application/json")
-            .end(arr.encodePrettily());
+                .putHeader("content-type", "application/json")
+                .end(arr.encodePrettily());
     }
-    
+
     public void addTemperatureData(double value) {
         temperatureData.addLast(new DataPoint(value, System.currentTimeMillis(), "sensor"));
         if (temperatureData.size() > MAX_SIZE) {
@@ -113,10 +121,10 @@ public class DataService extends AbstractVerticle {
 
     private void handleGetCurrentState(RoutingContext ctx) {
         JsonObject state = new JsonObject()
-            .put("mode", systemState.mode)
-            .put("window", systemState.windowPosition)
-            .put("state", systemState.state)
-            .put("lastManualCommandSource", lastManualCommandSource);
+                .put("mode", systemState.mode)
+                .put("window", systemState.windowPosition)
+                .put("state", systemState.state)
+                .put("lastManualCommandSource", lastManualCommandSource);
         ctx.response().end(state.encodePrettily());
     }
 
@@ -127,7 +135,7 @@ public class DataService extends AbstractVerticle {
             String mode = body.getString("mode");
             int position = body.getInteger("position");
             String source = body.getString("source", "Dashboard");
-    
+
             vertx.executeBlocking(promise -> {
                 serialChannel.sendMsg("MODE:" + mode);
                 serialChannel.sendMsg("POS:" + position);

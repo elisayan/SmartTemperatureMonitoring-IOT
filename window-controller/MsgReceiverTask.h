@@ -10,6 +10,8 @@ class MsgReceiverTask : public Task {
   int& windowPosition;
   float& currentTemperature;
 
+  void processLine(const String& line);
+
 public:
   MsgReceiverTask(MsgServiceClass& service, bool& mode, int& pos, float& temp);
   void init(int period) override;
