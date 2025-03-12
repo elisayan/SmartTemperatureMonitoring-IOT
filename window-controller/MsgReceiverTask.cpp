@@ -9,16 +9,19 @@ void MsgReceiverTask::init(int period) {
 }
 
 void MsgReceiverTask::tick() {
-  if (msgService.isMsgAvailable()) {
-    Msg* msg = msgService.receiveMsg();
-    String content = msg->getContent();
+  while (Serial.available() > 0) {
+    String line = Serial.readStringUntil('\n');
+    line.trim();
+    processLine(line);
+  }
+}
 
-    if (content.startsWith("TEMP:")) {
-      currentTemperature = content.substring(5).toFloat();
-    } else if (content.startsWith("POS:")) {
-      windowPosition = content.substring(4).toInt();
-    } else if (content.startsWith("MODE:")) {
-      manualMode = (content.substring(5) == "MANUAL");
-    }
+void MsgReceiverTask::processLine(const String& line) {
+  if (line.startsWith("TEMP:")) {
+    currentTemperature = line.substring(5).toFloat();
+  } else if (line.startsWith("POS:")) {
+    windowPosition = line.substring(4).toInt();
+  } else if (line.startsWith("MODE:")) {
+    manualMode = (line.substring(5) == "MANUAL");
   }
 }
