@@ -87,9 +87,13 @@ public class MQTTAgent extends AbstractVerticle {
     private void sendToArduino(int pos, double temp) {
         try {
             if (temp != lastSentTemp || pos != lastSentPos) {
-                String message = String.format("POS:%d\nTEMP:%.2f\n",pos, temp);
+                String message = String.format("POS:%d\n",pos, temp);
                 serialChannel.sendMsg(message);
                 System.out.println("Sent to Arduino: \n" + message);
+
+                String message1 = String.format("TEMP:%.2f\n", temp);
+                serialChannel.sendMsg(message1);
+                System.out.print(message1);
 
                 lastSentTemp = temp;
                 lastSentPos = pos;

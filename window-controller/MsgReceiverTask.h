@@ -11,6 +11,7 @@ class MsgReceiverTask : public Task {
   float& currentTemperature;
 
   void processLine(const String& line);
+  String extractValue(const String& line, const String& key);
 
 public:
   MsgReceiverTask(MsgServiceClass& service, bool& mode, int& pos, float& temp);
