@@ -10,7 +10,7 @@ Led redLed(RED_LED_PIN);
 
 const char* SSID = "TP-LINK_2658";
 const char* PASSWORD = "66864073";
-const char* MQTT_SERVER = "broker.mqtt-dashboard.com";
+const char* MQTT_SERVER = "test.mosquitto.org";//"broker.mqtt-dashboard.com";
 const char* TOPIC = "temperature/data";
 
 WiFiClient espClient;

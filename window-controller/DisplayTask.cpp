@@ -9,6 +9,8 @@ void DisplayTask::init(int period) {
 }
 
 void DisplayTask::tick() {
+  lcd.clear();
+
   lcd.setCursor(0, 0);
   lcd.print("Mode: ");
   lcd.print(manualMode ? "MANUAL" : "AUTOMATIC");

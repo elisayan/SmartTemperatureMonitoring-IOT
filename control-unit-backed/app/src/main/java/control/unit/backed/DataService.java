@@ -27,9 +27,9 @@ public class DataService extends AbstractVerticle {
     }
 
     private static class SystemState {
-        volatile String mode = "AUTOMATIC";
-        volatile int windowPosition = 0;
-        volatile String state = "NORMAL";
+        String mode = "AUTOMATIC";
+        int windowPosition = 0;
+        String state = "NORMAL";
     }
 
     @Override
@@ -139,6 +139,7 @@ public class DataService extends AbstractVerticle {
             vertx.executeBlocking(promise -> {
                 serialChannel.sendMsg("MODE:" + mode);
                 serialChannel.sendMsg("POS:" + position);
+                System.out.println("http send to arduino: "+mode+" "+position);
                 promise.complete();
             }, false, res -> {
                 if (res.succeeded()) {
@@ -162,5 +163,9 @@ public class DataService extends AbstractVerticle {
     public void updateState(int windowPos, String state) {
         systemState.windowPosition = windowPos;
         systemState.state = state;
+    }
+
+    public String getCurrentMode(){
+        return systemState.mode;
     }
 }

@@ -4,7 +4,7 @@ import io.vertx.core.AbstractVerticle;
 import io.vertx.mqtt.MqttClient;
 
 public class MQTTAgent extends AbstractVerticle {
-    private static final String BROKER_ADDRESS = "broker.mqtt-dashboard.com"; // "test.mosquitto.org";
+    private static final String BROKER_ADDRESS = "test.mosquitto.org";//"broker.mqtt-dashboard.com"; 
     private static final String TEMPERATURE_TOPIC = "temperature/data";
     private static final double T1 = 10.0, T2 = 25.0;
     private static final long DT = 10000;
@@ -86,14 +86,14 @@ public class MQTTAgent extends AbstractVerticle {
 
     private void sendToArduino(int pos, double temp) {
         try {
-            if (temp != lastSentTemp || pos != lastSentPos) {
+            if (dataService.getCurrentMode() == "AUTOMATIC" && (temp != lastSentTemp || pos != lastSentPos)) {
                 String message = String.format("POS:%d\n",pos, temp);
                 serialChannel.sendMsg(message);
-                System.out.println("Sent to Arduino: \n" + message);
+                System.out.print("Sent to Arduino: \n" + message);
 
                 String message1 = String.format("TEMP:%.2f\n", temp);
                 serialChannel.sendMsg(message1);
-                System.out.print(message1);
+                System.out.println(message1);
 
                 lastSentTemp = temp;
                 lastSentPos = pos;
