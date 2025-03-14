@@ -16,7 +16,7 @@ public class SerialCommChannel implements CommChannel, SerialPortEventListener {
 	private StringBuffer currentMsg = new StringBuffer("");
 	
 	public SerialCommChannel(String port, int rate) throws Exception {
-		queue = new ArrayBlockingQueue<String>(100);
+		queue = new ArrayBlockingQueue<String>(1000);
 
 		serialPort = new SerialPort(port);
 		serialPort.openPort();
@@ -56,6 +56,8 @@ public class SerialCommChannel implements CommChannel, SerialPortEventListener {
 
 	@Override
 	public boolean isMsgAvailable() {
+		//System.out.println("Queue is empty: " + queue.isEmpty());
+
 		return !queue.isEmpty();
 	}
 

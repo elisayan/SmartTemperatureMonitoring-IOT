@@ -4,12 +4,15 @@ import io.vertx.core.AbstractVerticle;
 import io.vertx.mqtt.MqttClient;
 
 public class MQTTAgent extends AbstractVerticle {
-    private static final String BROKER_ADDRESS = "test.mosquitto.org";//"broker.mqtt-dashboard.com"; 
+    private static final String BROKER_ADDRESS = "test.mosquitto.org";// "broker.mqtt-dashboard.com";
     private static final String TEMPERATURE_TOPIC = "temperature/data";
     private static final double T1 = 10.0, T2 = 25.0;
     private static final long DT = 10000;
 
-    private enum SystemState { NORMAL, HOT, TOO_HOT, ALARM }
+    private enum SystemState {
+        NORMAL, HOT, TOO_HOT, ALARM
+    }
+
     private SerialCommChannel serialChannel;
     private MqttClient client;
     private DataService dataService;
@@ -18,6 +21,7 @@ public class MQTTAgent extends AbstractVerticle {
 
     private double lastSentTemp = -1;
     private int lastSentPos = -1;
+    private String mode = "AUTOMATIC";
 
     public MQTTAgent(DataService dataService, SerialCommChannel serialChannel) {
         this.dataService = dataService;
@@ -26,16 +30,21 @@ public class MQTTAgent extends AbstractVerticle {
 
     @Override
     public void start() {
-        try {            
+        startSerialListener();
+        try {
             client = MqttClient.create(vertx);
             client.connect(1883, BROKER_ADDRESS, c -> {
                 if (c.succeeded()) {
                     client.subscribe(TEMPERATURE_TOPIC, 1);
-                    
+
                     client.publishHandler(msg -> {
                         if (msg.topicName().equals(TEMPERATURE_TOPIC)) {
                             String payload = msg.payload().toString();
-                            handleTemperature(payload);
+                            try {
+                                handleTemperature(payload);
+                            } catch (Exception e) {
+                                System.err.println("Error at handle temperature");
+                            }
                         }
                     });
                 } else {
@@ -58,15 +67,14 @@ public class MQTTAgent extends AbstractVerticle {
             }
             currentState = SystemState.TOO_HOT;
         }
-        
+
         dataService.updateState(
-            calculateWindowPosition(temp),
-            (currentState == SystemState.TOO_HOT && 
-             System.currentTimeMillis() - tooHotStartTime > DT) ? "ALARM" : currentState.name()
-        );
+                calculateWindowPosition(temp),
+                (currentState == SystemState.TOO_HOT &&
+                        System.currentTimeMillis() - tooHotStartTime > DT) ? "ALARM" : currentState.name());
     }
 
-    private void handleTemperature(String tempStr) {
+    private void handleTemperature(String tempStr) throws InterruptedException {
         try {
             double temp = Double.parseDouble(tempStr);
             updateSystemState(temp);
@@ -79,15 +87,19 @@ public class MQTTAgent extends AbstractVerticle {
     }
 
     private int calculateWindowPosition(double temp) {
-        if (temp < T1) return 0;
-        if (temp > T2) return 90;
+        if (temp < T1)
+            return 0;
+        if (temp > T2)
+            return 90;
         return (int) (((temp - T1) / (T2 - T1)) * 90);
     }
 
-    private void sendToArduino(int pos, double temp) {
+    private void sendToArduino(int pos, double temp) throws InterruptedException {
         try {
-            if (dataService.getCurrentMode() == "AUTOMATIC" && (temp != lastSentTemp || pos != lastSentPos)) {
-                String message = String.format("POS:%d\n",pos, temp);
+            System.out.println("MODE: "+mode);
+            if (mode.equals("AUTOMATIC") && dataService.getCurrentMode() .equals("AUTOMATIC")
+                    && (temp != lastSentTemp || pos != lastSentPos)) {
+                String message = String.format("POS:%d\n", pos, temp);
                 serialChannel.sendMsg(message);
                 System.out.print("Sent to Arduino: \n" + message);
 
@@ -103,6 +115,24 @@ public class MQTTAgent extends AbstractVerticle {
         } catch (Exception e) {
             System.err.println("Failed to send message to Arduino: " + e.getMessage());
         }
+    }
+
+    private void startSerialListener() {
+        new Thread(() -> {
+            while (true) {
+                try {
+                    if (serialChannel.isMsgAvailable()) {
+                        String msg = serialChannel.receiveMsg();
+                        if (msg.startsWith("MODE:")) {
+                            mode = msg.split(":")[1].trim();
+                        }
+                    }
+                    Thread.sleep(100); 
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            }
+        }).start();
     }
 
     @Override

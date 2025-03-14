@@ -13,7 +13,11 @@ void ButtonTask::tick() {
   bool currentState = digitalRead(pin);
   if (currentState == HIGH && lastState == LOW && (millis() - lastPressTime) > 200) {
     manualMode = !manualMode;
-    msgService.sendMsg("MODE:" + String(manualMode ? "MANUAL" : "AUTOMATIC"));
+    if (manualMode) {
+      msgService.sendMsg("MODE:MANUAL");
+    } else {
+      msgService.sendMsg("MODE:AUTOMATIC");
+    }
     msgService.sendMsg("SOURCE:Arduino");
     lastPressTime = millis();
   }
