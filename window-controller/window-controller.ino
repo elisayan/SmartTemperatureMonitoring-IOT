@@ -38,9 +38,9 @@ void setup() {
   scheduler.addTask(dispTask);
 
   msgTask->init(100);
-  btnTask->init(100);
-  potTask->init(150);
-  dispTask->init(500);
+  btnTask->init(200);
+  potTask->init(300);
+  dispTask->init(1000);
 }
 
 void loop() {
