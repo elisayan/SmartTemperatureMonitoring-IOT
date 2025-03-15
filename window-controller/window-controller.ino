@@ -38,7 +38,7 @@ void setup() {
   scheduler.addTask(dispTask);
 
   msgTask->init(100);
-  btnTask->init(50);
+  btnTask->init(100);
   potTask->init(150);
   dispTask->init(500);
 }

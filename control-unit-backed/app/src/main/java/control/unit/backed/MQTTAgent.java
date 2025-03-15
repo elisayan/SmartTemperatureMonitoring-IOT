@@ -96,21 +96,26 @@ public class MQTTAgent extends AbstractVerticle {
 
     private void sendToArduino(int pos, double temp) throws InterruptedException {
         try {
-            System.out.println("MODE: "+mode);
-            if (mode.equals("AUTOMATIC") && dataService.getCurrentMode() .equals("AUTOMATIC")
-                    && (temp != lastSentTemp || pos != lastSentPos)) {
-                String message = String.format("POS:%d\n", pos, temp);
-                serialChannel.sendMsg(message);
-                System.out.print("Sent to Arduino: \n" + message);
+            if (mode.equals("AUTOMATIC") && dataService.getCurrentMode().equals("AUTOMATIC")) {
+                if (temp != lastSentTemp || pos != lastSentPos) {
+                    String message = String.format("POS:%d\n", pos, temp);
+                    serialChannel.sendMsg(message);
+                    System.out.print("Sent to Arduino: \n" + message);
 
+                    String message1 = String.format("TEMP:%.2f\n", temp);
+                    serialChannel.sendMsg(message1);
+                    System.out.println(message1);
+
+                    lastSentTemp = temp;
+                    lastSentPos = pos;
+                } else {
+                    System.out.println("Data unchanged. Skipping send to Arduino.");
+                }
+            } else {
+                System.out.println("System in manual mode, only update temperature");
                 String message1 = String.format("TEMP:%.2f\n", temp);
                 serialChannel.sendMsg(message1);
                 System.out.println(message1);
-
-                lastSentTemp = temp;
-                lastSentPos = pos;
-            } else {
-                System.out.println("Data unchanged. Skipping send to Arduino.");
             }
         } catch (Exception e) {
             System.err.println("Failed to send message to Arduino: " + e.getMessage());
@@ -125,9 +130,10 @@ public class MQTTAgent extends AbstractVerticle {
                         String msg = serialChannel.receiveMsg();
                         if (msg.startsWith("MODE:")) {
                             mode = msg.split(":")[1].trim();
+                            System.out.println(mode);
                         }
                     }
-                    Thread.sleep(100); 
+                    Thread.sleep(100);
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
