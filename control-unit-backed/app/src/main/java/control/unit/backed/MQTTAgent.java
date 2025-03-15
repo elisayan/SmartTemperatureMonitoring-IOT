@@ -97,28 +97,36 @@ public class MQTTAgent extends AbstractVerticle {
     private void sendToArduino(int pos, double temp) throws InterruptedException {
         try {
             if (mode.equals("AUTOMATIC") && dataService.getCurrentMode().equals("AUTOMATIC")) {
-                if (temp != lastSentTemp || pos != lastSentPos) {
-                    String message = String.format("POS:%d\n", pos, temp);
-                    serialChannel.sendMsg(message);
-                    System.out.print("Sent to Arduino: \n" + message);
-
-                    String message1 = String.format("TEMP:%.2f\n", temp);
-                    serialChannel.sendMsg(message1);
-                    System.out.println(message1);
-
-                    lastSentTemp = temp;
-                    lastSentPos = pos;
-                } else {
-                    System.out.println("Data unchanged. Skipping send to Arduino.");
-                }
+                sendPosition(pos);
+                sendTemperature(temp);
+                System.out.println("POS: "+pos);
+                System.out.println("TEMP: "+temp);
             } else {
                 System.out.println("System in manual mode, only update temperature");
-                String message1 = String.format("TEMP:%.2f\n", temp);
-                serialChannel.sendMsg(message1);
-                System.out.println(message1);
+                sendTemperature(temp);
             }
         } catch (Exception e) {
             System.err.println("Failed to send message to Arduino: " + e.getMessage());
+        }
+    }
+
+    private void sendTemperature(double temp){
+        if (temp != lastSentTemp) {
+            String msg = String.format("TEMP:%.2f\n", temp);
+            serialChannel.sendMsg(msg);
+            lastSentTemp = temp;
+        } else {
+            System.out.println("Temperature unchanged. Skipping send to Arduino.");
+        }
+    }
+
+    private void sendPosition(int pos){
+        if (pos != lastSentPos) {
+            String msg = String.format("POS:%d\n", pos);
+            serialChannel.sendMsg(msg);
+            lastSentPos = pos;
+        } else {
+            System.out.println("Position unchanged. Skipping send to Arduino.");
         }
     }
 
@@ -130,7 +138,6 @@ public class MQTTAgent extends AbstractVerticle {
                         String msg = serialChannel.receiveMsg();
                         if (msg.startsWith("MODE:")) {
                             mode = msg.split(":")[1].trim();
-                            System.out.println(mode);
                         }
                     }
                     Thread.sleep(100);
