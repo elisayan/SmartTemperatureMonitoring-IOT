@@ -118,14 +118,7 @@ public class DataService extends AbstractVerticle {
                 if (mode.equals("MANUAL")) {
                     serialChannel.sendMsg("POS:" + position);
                 }
-                serialChannel.sendMsg("POS:" + position);
                 System.out.println("http send to arduino:\nMODE: " + mode + "\nPOSITION: " + position);
-
-                // Attendi una risposta dalla seriale (opzionale)
-                if (serialChannel.isMsgAvailable()) {
-                    String msg = serialChannel.receiveMsg();
-                    // Puoi gestire la risposta qui se necessario
-                }
 
                 systemState.mode = mode;
                 systemState.windowPosition = position;
@@ -145,9 +138,11 @@ public class DataService extends AbstractVerticle {
         }).start();
     }
 
-    public void updateState(int windowPos, String state) {
+    public void updateState(int windowPos, String state, String mode) {
         systemState.windowPosition = windowPos;
         systemState.state = state;
+        systemState.mode = mode;
+        System.out.println("State updated: mode:" + mode + ", position:" + windowPos + ", state:" + state);
     }
 
     public String getCurrentMode() {

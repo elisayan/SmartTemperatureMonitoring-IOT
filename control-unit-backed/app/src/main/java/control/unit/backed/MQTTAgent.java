@@ -1,14 +1,13 @@
 package control.unit.backed;
 
 import io.vertx.core.AbstractVerticle;
-import io.vertx.core.json.JsonObject;
 import io.vertx.mqtt.MqttClient;
 
 public class MQTTAgent extends AbstractVerticle {
-    private static final String BROKER_ADDRESS = "test.mosquitto.org";// "broker.mqtt-dashboard.com";
+    private static final String BROKER_ADDRESS = "test.mosquitto.org";//"broker.mqtt-dashboard.com";
     private static final String TEMPERATURE_TOPIC = "temperature/data";
     private static final double T1 = 10.0, T2 = 25.0;
-    private static final long DT = 10000;
+    private static final long DT = 5000;
 
     private enum SystemState {
         NORMAL, HOT, TOO_HOT, ALARM
@@ -70,11 +69,10 @@ public class MQTTAgent extends AbstractVerticle {
             }
             currentState = SystemState.TOO_HOT;
         }
-
-        dataService.updateState(
-                position,
-                (currentState == SystemState.TOO_HOT &&
-                        System.currentTimeMillis() - tooHotStartTime > DT) ? "ALARM" : currentState.name());
+    
+        if (currentState == SystemState.TOO_HOT && System.currentTimeMillis() - tooHotStartTime > DT) {
+            currentState = SystemState.ALARM;
+        }
     }
 
     private void handleTemperature(String tempStr) throws InterruptedException {
@@ -83,6 +81,7 @@ public class MQTTAgent extends AbstractVerticle {
             position = calculateWindowPosition(temp);
             dataService.addTemperatureData(temp);
             updateSystemState(temp);
+            dataService.updateState(position, currentState.name(), mode);
             sendToArduino(position, temp);
         } catch (NumberFormatException e) {
             System.err.println("Invalid temperature format");
@@ -133,14 +132,6 @@ public class MQTTAgent extends AbstractVerticle {
         }
     }
 
-    private void sendModeAndPositionToDataService(String mode, int position) {
-        JsonObject json = new JsonObject()
-                .put("mode", mode)
-                .put("position", position);
-
-        vertx.eventBus().send("data.service.update", json);
-    }
-
     private void startSerialListener() {
         new Thread(() -> {
             while (true) {
@@ -150,13 +141,11 @@ public class MQTTAgent extends AbstractVerticle {
                         if (msg.startsWith("MODE:")) {
                             mode = msg.split(":")[1].trim();
                             System.out.println("MQTT mode: " + mode);
-                            sendModeAndPositionToDataService(mode, position);
                         } else if (msg.startsWith("POS:")) {
                             int pos = Integer.parseInt(msg.split(":")[1].trim());
                             if (mode.equals("MANUAL")) {
                                 position = pos;
-                                sendModeAndPositionToDataService(mode, position);
-                                System.out.println("Position updated from Arduino: " + pos);
+                                dataService.updateState(position, currentState.name(), mode);
                             }
                         }
                     }

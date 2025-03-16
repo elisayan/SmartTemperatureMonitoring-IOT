@@ -17,7 +17,7 @@ WiFiClient espClient;
 PubSubClient mqttClient(espClient);
 
 unsigned long lastSampleTime = 0;
-const unsigned long SAMPLING_INTERVAL = 10000;
+const unsigned long SAMPLING_INTERVAL = 5000;
 
 void setup() {
   Serial.begin(115200);
