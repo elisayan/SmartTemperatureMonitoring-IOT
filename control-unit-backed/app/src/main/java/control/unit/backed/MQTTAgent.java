@@ -1,6 +1,7 @@
 package control.unit.backed;
 
 import io.vertx.core.AbstractVerticle;
+import io.vertx.core.json.JsonObject;
 import io.vertx.mqtt.MqttClient;
 
 public class MQTTAgent extends AbstractVerticle {
@@ -21,7 +22,9 @@ public class MQTTAgent extends AbstractVerticle {
 
     private double lastSentTemp = -1;
     private int lastSentPos = -1;
+
     private String mode = "AUTOMATIC";
+    private int position = -1;
 
     public MQTTAgent(DataService dataService, SerialCommChannel serialChannel) {
         this.dataService = dataService;
@@ -69,7 +72,7 @@ public class MQTTAgent extends AbstractVerticle {
         }
 
         dataService.updateState(
-                calculateWindowPosition(temp),
+                position,
                 (currentState == SystemState.TOO_HOT &&
                         System.currentTimeMillis() - tooHotStartTime > DT) ? "ALARM" : currentState.name());
     }
@@ -77,10 +80,10 @@ public class MQTTAgent extends AbstractVerticle {
     private void handleTemperature(String tempStr) throws InterruptedException {
         try {
             double temp = Double.parseDouble(tempStr);
-            updateSystemState(temp);
+            position = calculateWindowPosition(temp);
             dataService.addTemperatureData(temp);
-            int windowPos = calculateWindowPosition(temp);
-            sendToArduino(windowPos, temp);
+            updateSystemState(temp);
+            sendToArduino(position, temp);
         } catch (NumberFormatException e) {
             System.err.println("Invalid temperature format");
         }
@@ -99,8 +102,8 @@ public class MQTTAgent extends AbstractVerticle {
             if (mode.equals("AUTOMATIC") && dataService.getCurrentMode().equals("AUTOMATIC")) {
                 sendPosition(pos);
                 sendTemperature(temp);
-                System.out.println("POS: "+pos);
-                System.out.println("TEMP: "+temp);
+                // System.out.println("POS: "+pos);
+                // System.out.println("TEMP: "+temp);
             } else {
                 System.out.println("System in manual mode, only update temperature");
                 sendTemperature(temp);
@@ -110,7 +113,7 @@ public class MQTTAgent extends AbstractVerticle {
         }
     }
 
-    private void sendTemperature(double temp){
+    private void sendTemperature(double temp) {
         if (temp != lastSentTemp) {
             String msg = String.format("TEMP:%.2f\n", temp);
             serialChannel.sendMsg(msg);
@@ -120,7 +123,7 @@ public class MQTTAgent extends AbstractVerticle {
         }
     }
 
-    private void sendPosition(int pos){
+    private void sendPosition(int pos) {
         if (pos != lastSentPos) {
             String msg = String.format("POS:%d\n", pos);
             serialChannel.sendMsg(msg);
@@ -128,6 +131,14 @@ public class MQTTAgent extends AbstractVerticle {
         } else {
             System.out.println("Position unchanged. Skipping send to Arduino.");
         }
+    }
+
+    private void sendModeAndPositionToDataService(String mode, int position) {
+        JsonObject json = new JsonObject()
+                .put("mode", mode)
+                .put("position", position);
+
+        vertx.eventBus().send("data.service.update", json);
     }
 
     private void startSerialListener() {
@@ -138,6 +149,15 @@ public class MQTTAgent extends AbstractVerticle {
                         String msg = serialChannel.receiveMsg();
                         if (msg.startsWith("MODE:")) {
                             mode = msg.split(":")[1].trim();
+                            System.out.println("MQTT mode: " + mode);
+                            sendModeAndPositionToDataService(mode, position);
+                        } else if (msg.startsWith("POS:")) {
+                            int pos = Integer.parseInt(msg.split(":")[1].trim());
+                            if (mode.equals("MANUAL")) {
+                                position = pos;
+                                sendModeAndPositionToDataService(mode, position);
+                                System.out.println("Position updated from Arduino: " + pos);
+                            }
                         }
                     }
                     Thread.sleep(100);
