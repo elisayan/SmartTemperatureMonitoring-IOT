@@ -107,35 +107,21 @@ public class DataService extends AbstractVerticle {
             ctx.response().setStatusCode(400).end("Invalid request body");
             return;
         }
-
+    
         String mode = body.getString("mode");
         int position = mode.equals("MANUAL") ? body.getInteger("position") : systemState.windowPosition;
         String source = body.getString("source", "Dashboard");
-
-        new Thread(() -> {
-            try {
-                serialChannel.sendMsg("MODE:" + mode);
-                if (mode.equals("MANUAL")) {
-                    serialChannel.sendMsg("POS:" + position);
-                }
-                System.out.println("http send to arduino:\nMODE: " + mode + "\nPOSITION: " + position);
-
-                systemState.mode = mode;
-                systemState.windowPosition = position;
-
-                if (mode.equals("MANUAL")) {
-                    lastManualCommandSource = source;
-                } else {
-                    lastManualCommandSource = null;
-                }
-
-                ctx.response().end("OK");
-            } catch (Exception e) {
-                e.printStackTrace();
-                ctx.response().setStatusCode(500).end("Errore interno");
-            }
-
-        }).start();
+    
+        systemState.mode = mode;
+        systemState.windowPosition = position;
+    
+        if (mode.equals("MANUAL")) {
+            lastManualCommandSource = source;
+        } else {
+            lastManualCommandSource = null;
+        }
+    
+        ctx.response().end("OK");
     }
 
     public void updateState(int windowPos, String state, String mode) {
@@ -147,5 +133,20 @@ public class DataService extends AbstractVerticle {
 
     public String getCurrentMode() {
         return systemState.mode;
+    }
+
+    private void startSerialHandler() {
+        new Thread(() -> {
+            while (true) {
+                try {
+                    if (serialChannel.isMsgAvailable()) {
+                        
+                    }
+                    Thread.sleep(100);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+        }).start();
     }
 }
