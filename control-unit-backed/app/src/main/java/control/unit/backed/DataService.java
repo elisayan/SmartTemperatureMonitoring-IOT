@@ -35,7 +35,7 @@ public class DataService extends AbstractVerticle {
 
     @Override
     public void start() throws InterruptedException {
-        startSerialHandler();
+        // startSerialHandler();
         Router router = Router.router(vertx);
 
         router.route().handler(CorsHandler.create()
@@ -114,7 +114,6 @@ public class DataService extends AbstractVerticle {
         int position = mode.equals("MANUAL") ? body.getInteger("position") : systemState.windowPosition;
         String source = body.getString("source", "Dashboard");
 
-        // Aggiorna lo stato interno
         systemState.mode = mode;
         systemState.windowPosition = position;
 
@@ -124,40 +123,30 @@ public class DataService extends AbstractVerticle {
             lastManualCommandSource = null;
         }
 
-        // Segnala che la modalità è stata cambiata
         modeChanged = true;
 
-        // Invia una risposta di successo al client
         ctx.response().end("OK");
     }
 
-    private void startSerialHandler() {
-        new Thread(() -> {
-            while (true) {
-                try {
-                    serialChannel.sendMsg("MODE:" + systemState.mode);
-                    if (systemState.mode.equals("MANUAL")) {
-                        serialChannel.sendMsg("POS:" + systemState.windowPosition);
-                    }
-                    System.out.println("HTTP mode: "+systemState.mode);
-                    Thread.sleep(100); // Attendi un po' prima di controllare di nuovo
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
-            }
-        }).start();
-    }
-
-    public void updateState(int windowPos, String state, String mode) {
+    public void updateState(int windowPos, String state) {
         systemState.windowPosition = windowPos;
         systemState.state = state;
-        systemState.mode = mode;
-        System.out.println("State updated: mode:" + mode + ", position:" + windowPos + ", state:" + state);
-
-        //todo qua si ritorna in modalità automatica quando ho cliccato sul dashboard
     }
 
     public String getCurrentMode() {
         return systemState.mode;
+    }
+
+    public boolean isModeChanged() {
+        // if(modeChanged) {
+        //     modeChanged = false;
+        //     return true;
+        // }
+        // return false;
+        return modeChanged;
+    }
+
+    public int getDashboardPosition(){
+        return systemState.windowPosition;
     }
 }
