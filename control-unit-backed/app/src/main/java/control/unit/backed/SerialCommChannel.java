@@ -17,7 +17,7 @@ public class SerialCommChannel implements CommChannel, SerialPortEventListener {
 	private final Controller controller;
 	
 	public SerialCommChannel(String port, int rate, Controller controller) throws Exception {
-		queue = new ArrayBlockingQueue<String>(1000000);
+		queue = new ArrayBlockingQueue<String>(100);
 
 		this.controller = controller;
 		serialPort = new SerialPort(port);
@@ -97,6 +97,7 @@ public class SerialCommChannel implements CommChannel, SerialPortEventListener {
             			if (index >= 0) {
             				queue.put(msg2.substring(0, index));
 							this.controller.receiveMsg(queue.take());
+							System.out.println("QUEUE SIZE: "+queue.size());
             				currentMsg = new StringBuffer("");
             				if (index + 1 < msg2.length()) {
             					currentMsg.append(msg2.substring(index + 1)); 

@@ -106,25 +106,25 @@ public class DataService extends AbstractVerticle {
             return;
         }
 
-        String mode = body.getString("mode");
-        int position = mode.equals("MANUAL") ? body.getInteger("position") : dashboardPosition;
-        String source = body.getString("source", "Dashboard");
+        dashboardMode = body.getString("mode");
+        dashboardPosition = dashboardMode.equals("MANUAL") ? body.getInteger("position") : dashboardPosition;
+        dashboardState = body.getString("source", "Dashboard");
 
-        dashboardMode = mode;
-        dashboardPosition = position;
-
-        if (mode.equals("MANUAL")) {
-            lastManualCommandSource = source;
-        } else {
-            lastManualCommandSource = null;
-        }
+        controller.synchronizeArduinoWithDataService();
 
         ctx.response().end("OK");
     }
 
-    public void updateState(int windowPos, String state) {
+    public void updateWindow(int windowPos) {
         dashboardPosition = windowPos;
+    }
+
+    public void updateState(String state){
         dashboardState = state;
+    }
+
+    public void updateMode(String mode){
+        dashboardMode = mode;
     }
 
     public String getCurrentMode() {
