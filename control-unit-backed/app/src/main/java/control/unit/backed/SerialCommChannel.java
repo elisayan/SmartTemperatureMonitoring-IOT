@@ -14,10 +14,12 @@ public class SerialCommChannel implements CommChannel, SerialPortEventListener {
 	private SerialPort serialPort;
 	private BlockingQueue<String> queue;
 	private StringBuffer currentMsg = new StringBuffer("");
+	private final Controller controller;
 	
-	public SerialCommChannel(String port, int rate) throws Exception {
+	public SerialCommChannel(String port, int rate, Controller controller) throws Exception {
 		queue = new ArrayBlockingQueue<String>(1000000);
 
+		this.controller = controller;
 		serialPort = new SerialPort(port);
 		serialPort.openPort();
 
@@ -94,6 +96,7 @@ public class SerialCommChannel implements CommChannel, SerialPortEventListener {
         				int index = msg2.indexOf("\n");
             			if (index >= 0) {
             				queue.put(msg2.substring(0, index));
+							this.controller.receiveMsg(queue.take());
             				currentMsg = new StringBuffer("");
             				if (index + 1 < msg2.length()) {
             					currentMsg.append(msg2.substring(index + 1)); 
