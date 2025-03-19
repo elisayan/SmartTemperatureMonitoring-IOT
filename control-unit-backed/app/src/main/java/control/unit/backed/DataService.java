@@ -16,15 +16,14 @@ public class DataService extends AbstractVerticle {
     private static final int MAX_SIZE = 50;
     private CopyOnWriteArrayList<DataPoint> temperatureData;
     private SystemState systemState;
-    private SerialCommChannel serialChannel;
     private String lastManualCommandSource = null;
     private boolean modeChanged = false;
+    private Controller controller;
 
-    public DataService(int port, SerialCommChannel serialChannel) throws Exception {
+    public DataService(int port) throws Exception {
         temperatureData = new CopyOnWriteArrayList<>();
         systemState = new SystemState();
         this.port = port;
-        this.serialChannel = serialChannel;
     }
 
     private static class SystemState {
@@ -55,6 +54,10 @@ public class DataService extends AbstractVerticle {
         router.post("/api/mode").handler(this::handleModeChange);
 
         vertx.createHttpServer().requestHandler(router).listen(port);
+    }
+
+    public void setController(Controller controller) {
+        this.controller = controller;
     }
 
     private void handleAddNewData(RoutingContext ctx) {
@@ -139,14 +142,14 @@ public class DataService extends AbstractVerticle {
 
     public boolean isModeChanged() {
         // if(modeChanged) {
-        //     modeChanged = false;
-        //     return true;
+        // modeChanged = false;
+        // return true;
         // }
         // return false;
         return modeChanged;
     }
 
-    public int getDashboardPosition(){
+    public int getDashboardPosition() {
         return systemState.windowPosition;
     }
 }

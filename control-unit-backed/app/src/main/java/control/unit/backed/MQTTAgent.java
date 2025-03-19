@@ -9,13 +9,9 @@ public class MQTTAgent extends AbstractVerticle {
     private static final double T1 = 10.0, T2 = 25.0;
     private static final long DT = 5000;
 
-    private enum SystemState {
-        NORMAL, HOT, TOO_HOT, ALARM
-    }
-
-    private SerialCommChannel serialChannel;
     private MqttClient client;
-    private DataService dataService;
+    private Controller controller;
+
     private SystemState currentState = SystemState.NORMAL;
     private long tooHotStartTime = 0;
 
@@ -24,15 +20,14 @@ public class MQTTAgent extends AbstractVerticle {
 
     private String mode = "AUTOMATIC";
     private int position = -1;
-
-    public MQTTAgent(DataService dataService, SerialCommChannel serialChannel) {
-        this.dataService = dataService;
-        this.serialChannel = serialChannel;
+    
+    private enum SystemState {
+        NORMAL, HOT, TOO_HOT, ALARM
     }
 
     @Override
     public void start() {
-        startSerialListener();
+        // startSerialListener();
         try {
             client = MqttClient.create(vertx);
             client.connect(1883, BROKER_ADDRESS, c -> {
@@ -56,6 +51,10 @@ public class MQTTAgent extends AbstractVerticle {
         } catch (Exception e) {
             e.printStackTrace();
         }
+    }
+
+    public void setController(Controller controller){
+        this.controller = controller;
     }
 
     private void updateSystemState(double temp) {
@@ -87,7 +86,7 @@ public class MQTTAgent extends AbstractVerticle {
         try {
             double temp = Double.parseDouble(tempStr);
             position = calculateWindowPosition(temp);
-            dataService.addTemperatureData(temp);
+            //dataService.addTemperatureData(temp);
             updateSystemState(temp);
 
             // if (!dataService.getCurrentMode().equals(mode)) {
@@ -95,7 +94,7 @@ public class MQTTAgent extends AbstractVerticle {
             //         mode = dataService.getCurrentMode();
             //     }
             // }
-            dataService.updateState(position, currentState.name());
+            //dataService.updateState(position, currentState.name());
             sendToArduino(position, temp);
         } catch (NumberFormatException e) {
             System.err.println("Invalid temperature format");
@@ -104,18 +103,18 @@ public class MQTTAgent extends AbstractVerticle {
 
     private void sendToArduino(int pos, double temp) throws InterruptedException {
         try {
-            if (dataService.isModeChanged()) {
-                mode = dataService.getCurrentMode();
-                sendMode();
-                System.out.println("Mode synchronized to DataService: " + mode);   
-            }
+            // if (dataService.isModeChanged()) {
+            //     mode = dataService.getCurrentMode();
+            //     sendMode();
+            //     System.out.println("Mode synchronized to DataService: " + mode);   
+            // }
 
-            if (dataService.getCurrentMode().equals("MANUAL")) {
-                sendPosition(dataService.getDashboardPosition());
-                System.out.println("send dashboard position: "+dataService.getDashboardPosition());
-            } else {
-                sendPosition(pos);
-            }
+            // if (dataService.getCurrentMode().equals("MANUAL")) {
+            //     sendPosition(dataService.getDashboardPosition());
+            //     System.out.println("send dashboard position: "+dataService.getDashboardPosition());
+            // } else {
+            //     sendPosition(pos);
+            // }
             sendTemperature(temp);
             System.out.println("Send to arduino: POS: "+pos+" TEMP: "+temp+"\n");
         } catch (Exception e) {
@@ -126,7 +125,7 @@ public class MQTTAgent extends AbstractVerticle {
     private void sendTemperature(double temp) {
         if (temp != lastSentTemp) {
             String msg = String.format("TEMP:%.2f\n", temp);
-            serialChannel.sendMsg(msg);
+            //serialChannel.sendMsg(msg);
             lastSentTemp = temp;
         } else {
             System.out.println("Temperature unchanged. Skipping send to Arduino.");
@@ -136,7 +135,7 @@ public class MQTTAgent extends AbstractVerticle {
     private void sendPosition(int pos) {
         if (pos != lastSentPos) {
             String msg = String.format("POS:%d\n", pos);
-            serialChannel.sendMsg(msg);
+            //serialChannel.sendMsg(msg);
             lastSentPos = pos;
         } else {
             System.out.println("Position unchanged. Skipping send to Arduino.");
@@ -146,37 +145,37 @@ public class MQTTAgent extends AbstractVerticle {
     private void sendMode() {
         try {
             String msg = String.format("MODE:%s\n", mode);
-            serialChannel.sendMsg(msg);
+            //serialChannel.sendMsg(msg);
             System.out.println("Sent mode to Arduino: " + mode);
         } catch (Exception e) {
             System.err.println("Failed to send mode to Arduino: " + e.getMessage());
         }
     }
 
-    private void startSerialListener() {
-        new Thread(() -> {
-            while (true) {
-                try {
-                    if (serialChannel.isMsgAvailable()) {
-                        String msg = serialChannel.receiveMsg();
-                        if (msg.startsWith("MODE:")) {
-                            mode = msg.split(":")[1].trim(); //to check maaybe error at here
-                            System.out.println("MQTT mode: " + mode);
-                        }
-                    }
-                    Thread.sleep(100);
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
-            }
-        }).start();
-    }
+    // private void startSerialListener() {
+    //     new Thread(() -> {
+    //         while (true) {
+    //             try {
+    //                 if (serialChannel.isMsgAvailable()) {
+    //                     String msg = serialChannel.receiveMsg();
+    //                     if (msg.startsWith("MODE:")) {
+    //                         mode = msg.split(":")[1].trim(); //to check maaybe error at here
+    //                         System.out.println("MQTT mode: " + mode);
+    //                     }
+    //                 }
+    //                 Thread.sleep(100);
+    //             } catch (InterruptedException e) {
+    //                 e.printStackTrace();
+    //             }
+    //         }
+    //     }).start();
+    // }
 
     @Override
     public void stop() {
-        if (serialChannel != null) {
-            ((SerialCommChannel) serialChannel).close();
-        }
+        // if (serialChannel != null) {
+        //     ((SerialCommChannel) serialChannel).close();
+        // }
         client.disconnect();
     }
 }
