@@ -15,26 +15,19 @@ public class DataService extends AbstractVerticle {
     private int port;
     private static final int MAX_SIZE = 50;
     private CopyOnWriteArrayList<DataPoint> temperatureData;
-    private SystemState systemState;
     private String lastManualCommandSource = null;
-    private boolean modeChanged = false;
     private Controller controller;
+    private String dashboardMode = "AUTOMATIC";
+    private int dashboardPosition = 0;
+    private String dashboardState = "NORMAL";
 
     public DataService(int port) throws Exception {
         temperatureData = new CopyOnWriteArrayList<>();
-        systemState = new SystemState();
         this.port = port;
-    }
-
-    private static class SystemState {
-        String mode = "AUTOMATIC";
-        int windowPosition = 0;
-        String state = "NORMAL";
     }
 
     @Override
     public void start() throws InterruptedException {
-        // startSerialHandler();
         Router router = Router.router(vertx);
 
         router.route().handler(CorsHandler.create()
@@ -58,6 +51,13 @@ public class DataService extends AbstractVerticle {
 
     public void setController(Controller controller) {
         this.controller = controller;
+    }
+
+    public void addTemperatureData(double temp) {
+        temperatureData.addLast(new DataPoint(temp, System.currentTimeMillis(), "sensor"));
+        if (temperatureData.size() > MAX_SIZE) {
+            temperatureData.removeFirst();
+        }
     }
 
     private void handleAddNewData(RoutingContext ctx) {
@@ -90,18 +90,11 @@ public class DataService extends AbstractVerticle {
                 .end(arr.encodePrettily());
     }
 
-    public void addTemperatureData(double value) {
-        temperatureData.addLast(new DataPoint(value, System.currentTimeMillis(), "sensor"));
-        if (temperatureData.size() > MAX_SIZE) {
-            temperatureData.removeFirst();
-        }
-    }
-
     private void handleGetCurrentState(RoutingContext ctx) {
         JsonObject state = new JsonObject()
-                .put("mode", systemState.mode)
-                .put("window", systemState.windowPosition)
-                .put("state", systemState.state)
+                .put("mode", dashboardMode)
+                .put("window", dashboardPosition)
+                .put("state", dashboardState)
                 .put("lastManualCommandSource", lastManualCommandSource);
         ctx.response().end(state.encodePrettily());
     }
@@ -114,11 +107,11 @@ public class DataService extends AbstractVerticle {
         }
 
         String mode = body.getString("mode");
-        int position = mode.equals("MANUAL") ? body.getInteger("position") : systemState.windowPosition;
+        int position = mode.equals("MANUAL") ? body.getInteger("position") : dashboardPosition;
         String source = body.getString("source", "Dashboard");
 
-        systemState.mode = mode;
-        systemState.windowPosition = position;
+        dashboardMode = mode;
+        dashboardPosition = position;
 
         if (mode.equals("MANUAL")) {
             lastManualCommandSource = source;
@@ -126,30 +119,19 @@ public class DataService extends AbstractVerticle {
             lastManualCommandSource = null;
         }
 
-        modeChanged = true;
-
         ctx.response().end("OK");
     }
 
     public void updateState(int windowPos, String state) {
-        systemState.windowPosition = windowPos;
-        systemState.state = state;
+        dashboardPosition = windowPos;
+        dashboardState = state;
     }
 
     public String getCurrentMode() {
-        return systemState.mode;
-    }
-
-    public boolean isModeChanged() {
-        // if(modeChanged) {
-        // modeChanged = false;
-        // return true;
-        // }
-        // return false;
-        return modeChanged;
+        return dashboardMode;
     }
 
     public int getDashboardPosition() {
-        return systemState.windowPosition;
+        return dashboardPosition;
     }
 }
