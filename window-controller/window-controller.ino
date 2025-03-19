@@ -28,9 +28,9 @@ void setup() {
   scheduler.init(100);
 
   Task* msgTask = new MsgReceiverTask(MsgService, manualMode, windowPosition, currentTemperature);
-  Task* btnTask = new ButtonTask(BUTTON_PIN, manualMode, MsgService);
+  Task* btnTask = new ButtonTask(BUTTON_PIN, manualMode);
   Task* potTask = new PotTask(POT_PIN, windowPosition, manualMode, MsgService);
-  Task* dispTask = new DisplayTask(lcd, manualMode, windowPosition, currentTemperature);
+  Task* dispTask = new DisplayTask(lcd, manualMode, windowPosition, currentTemperature, MsgService);
 
   scheduler.addTask(msgTask);
   scheduler.addTask(btnTask);
@@ -38,13 +38,13 @@ void setup() {
   scheduler.addTask(dispTask);
 
   msgTask->init(100);
-  btnTask->init(200);
-  potTask->init(300);
+  btnTask->init(50);
+  potTask->init(200);
   dispTask->init(1000);
 }
 
 void loop() {
   scheduler.schedule();
   windowServo.setPosition(windowPosition);
-  delay(50);
+  delay(100);
 }

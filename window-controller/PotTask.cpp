@@ -12,7 +12,5 @@ void PotTask::tick() {
   if (manualMode) {
     int val = analogRead(pin);
     windowPosition = map(val, 0, 1023, 0, 90);
-    msgService.sendMsg("POS:" + String(windowPosition));
-    msgService.sendMsg("SOURCE:Arduino");
   }
 }
