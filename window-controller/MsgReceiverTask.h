@@ -6,7 +6,6 @@
 #include "LCDDisplayI2C.h"
 
 class MsgReceiverTask : public Task {
-  MsgServiceClass* msgService;
   bool manualMode;
   int windowPosition;
   float currentTemperature;
@@ -17,7 +16,7 @@ class MsgReceiverTask : public Task {
   void updateDisplay();
 
 public:
-  MsgReceiverTask(MsgServiceClass* service, bool mode, int pos, float temp, LCDDisplayI2C* lcd);
+  MsgReceiverTask(bool mode, int pos, float temp, LCDDisplayI2C* lcd);
   void tick();
 };
 

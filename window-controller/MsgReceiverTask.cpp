@@ -1,8 +1,7 @@
 #include "MsgReceiverTask.h"
 #include "Arduino.h"
 
-MsgReceiverTask::MsgReceiverTask(MsgServiceClass* service, bool mode, int pos, float temp, LCDDisplayI2C* lcd) {
-  this->msgService = service;
+MsgReceiverTask::MsgReceiverTask(bool mode, int pos, float temp, LCDDisplayI2C* lcd) {
   this->lcd = lcd;
   this->manualMode = mode;
   this->currentTemperature = temp;
@@ -10,14 +9,31 @@ MsgReceiverTask::MsgReceiverTask(MsgServiceClass* service, bool mode, int pos, f
 }
 
 void MsgReceiverTask::tick() {
-  if (msgService->isMsgAvailable()) {
-    Msg* msg = msgService->receiveMsg();
+  
+    while (Serial.available() > 0) {
+    Serial.read();  // Svuota il buffer
+  }
+  if (MsgService.isMsgAvailable()) {
+    Msg* msg = MsgService.receiveMsg();
     if (msg) {
       String line = msg->getContent();
       processLine(line);
-      delete msg;
+      lcd->updateData(manualMode, windowPosition, currentTemperature);
+      // char buffer[50];
+      // snprintf(buffer, sizeof(buffer), "RECEIVED: %s %d %.2f",
+      //          manualMode ? "MANUAL" : "AUTOMATIC", windowPosition, currentTemperature);
+      // Serial.println(buffer);
+      // Serial.println(currentTemperature);
+      //delete msg;
+    }
+
+    if (msg == nullptr) {
+      Serial.println("MsgService NULL!");
+      return;
     }
   }
+
+
 }
 
 void MsgReceiverTask::processLine(const String line) {

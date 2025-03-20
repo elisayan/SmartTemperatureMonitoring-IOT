@@ -38,6 +38,8 @@ public class Controller {
             // else if (source.equals("DATASERVICE")) {
             // synchronizeArduinoWithDataService();
             // }
+        } else if (msg.startsWith("MsgService")) {
+            System.out.println("RECEIVED: "+msg.split(" ")[1].trim());
         }
     }
 
@@ -74,10 +76,14 @@ public class Controller {
         this.dataService.updateWindow(position);
         this.dataService.updateState(state);
 
-        sendSource("ARDUINO");
-        sendMode(this.mode);
-        sendTemperature(temp);
-        sendPosition(position);
+        try {
+            sendSource("ARDUINO");
+            sendMode(this.mode);
+            sendTemperature(temp);
+            sendPosition(position);
+        } catch (Exception e) {
+            System.err.println("Errore durante l'invio dei messaggi ad arduino");
+        }
 
         System.out.println(
                 "UPDATE: " + "MODE: " + this.mode + " TEMP: " + temp + " POS: " + position + " STATE: " + state);

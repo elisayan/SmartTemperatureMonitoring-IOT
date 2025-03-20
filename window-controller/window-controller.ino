@@ -27,9 +27,12 @@ void setup() {
   lcd->updateData(manualMode, windowPosition, currentTemperature);
   windowServo->on();
 
+  Serial.print("Buffer size: ");
+  Serial.println(SERIAL_RX_BUFFER_SIZE);
+
   scheduler.init(100);
 
-  Task* msgTask = new MsgReceiverTask(&MsgService, manualMode, windowPosition, currentTemperature, lcd);
+  Task* msgTask = new MsgReceiverTask(manualMode, windowPosition, currentTemperature, lcd);
   Task* btnTask = new ButtonTask(BUTTON_PIN, manualMode);
   Task* potTask = new PotTask(POT_PIN, windowPosition, manualMode);
 
@@ -45,5 +48,5 @@ void setup() {
 void loop() {
   scheduler.schedule();
   windowServo->setPosition(windowPosition);
-  delay(100);
+  delay(2000);
 }
