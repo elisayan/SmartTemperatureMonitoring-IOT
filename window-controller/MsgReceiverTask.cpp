@@ -1,16 +1,17 @@
 #include "MsgReceiverTask.h"
 #include "Arduino.h"
 
-MsgReceiverTask::MsgReceiverTask(MsgServiceClass& service, bool& mode, int& pos, float& temp)
-  : msgService(service), manualMode(mode), windowPosition(pos), currentTemperature(temp) {}
-
-void MsgReceiverTask::init(int period) {
-  Task::init(period);
+MsgReceiverTask::MsgReceiverTask(MsgServiceClass* service, bool mode, int pos, float temp, LCDDisplayI2C* lcd) {
+  this->msgService = service;
+  this->lcd = lcd;
+  this->manualMode = mode;
+  this->currentTemperature = temp;
+  this->windowPosition = pos;
 }
 
 void MsgReceiverTask::tick() {
-  if (msgService.isMsgAvailable()) {
-    Msg* msg = msgService.receiveMsg();
+  if (msgService->isMsgAvailable()) {
+    Msg* msg = msgService->receiveMsg();
     if (msg) {
       String line = msg->getContent();
       processLine(line);
@@ -19,7 +20,7 @@ void MsgReceiverTask::tick() {
   }
 }
 
-void MsgReceiverTask::processLine(const String& line) {
+void MsgReceiverTask::processLine(const String line) {
   if (line.indexOf("TEMP:") != -1) {
     currentTemperature = extractValue(line, "TEMP:").toFloat();
   }
@@ -33,7 +34,7 @@ void MsgReceiverTask::processLine(const String& line) {
   }
 }
 
-String MsgReceiverTask::extractValue(const String& line, const String& key) {
+String MsgReceiverTask::extractValue(const String line, const String key) {
   int keyIndex = line.indexOf(key);
   if (keyIndex == -1) {
     return "";

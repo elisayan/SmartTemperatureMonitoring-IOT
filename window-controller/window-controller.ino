@@ -6,10 +6,10 @@
 #include "MsgReceiverTask.h"
 #include "ButtonTask.h"
 #include "PotTask.h"
-#include "DisplayTask.h"
+#include "LCDDisplayI2C.h"
 
-LiquidCrystal_I2C lcd(0x27, 20, 4);
-ServoMotor windowServo(SERVO_PIN);
+LCDDisplayI2C* lcd;
+ServoMotor* windowServo(SERVO_PIN);
 
 bool manualMode = false;
 int windowPosition = 0;
@@ -21,30 +21,29 @@ void setup() {
   Serial.begin(115200);
   MsgService.init();
 
-  lcd.init();
-  lcd.backlight();
-  windowServo.on();
+  lcd = new LCDDisplayI2C();
+  windowServo = new ServoMotor(SERVO_PIN);
+  
+  lcd->updateData(manualMode, windowPosition, currentTemperature);
+  windowServo->on();
 
   scheduler.init(100);
 
-  Task* msgTask = new MsgReceiverTask(MsgService, manualMode, windowPosition, currentTemperature);
+  Task* msgTask = new MsgReceiverTask(&MsgService, manualMode, windowPosition, currentTemperature, lcd);
   Task* btnTask = new ButtonTask(BUTTON_PIN, manualMode);
-  Task* potTask = new PotTask(POT_PIN, windowPosition, manualMode, MsgService);
-  Task* dispTask = new DisplayTask(lcd, manualMode, windowPosition, currentTemperature, MsgService);
-
-  scheduler.addTask(msgTask);
-  scheduler.addTask(btnTask);
-  scheduler.addTask(potTask);
-  scheduler.addTask(dispTask);
+  Task* potTask = new PotTask(POT_PIN, windowPosition, manualMode);
 
   msgTask->init(100);
   btnTask->init(50);
   potTask->init(200);
-  dispTask->init(1000);
+
+  scheduler.addTask(msgTask);
+  scheduler.addTask(btnTask);
+  scheduler.addTask(potTask);
 }
 
 void loop() {
   scheduler.schedule();
-  windowServo.setPosition(windowPosition);
+  windowServo->setPosition(windowPosition);
   delay(100);
 }

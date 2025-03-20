@@ -3,20 +3,22 @@
 
 #include "Task.h"
 #include "MsgService.h"
+#include "LCDDisplayI2C.h"
 
 class MsgReceiverTask : public Task {
-  MsgServiceClass& msgService;
-  bool& manualMode;
-  int& windowPosition;
-  float& currentTemperature;
+  MsgServiceClass* msgService;
+  bool manualMode;
+  int windowPosition;
+  float currentTemperature;
+  LCDDisplayI2C* lcd;
 
-  void processLine(const String& line);
-  String extractValue(const String& line, const String& key);
+  void processLine(const String line);
+  String extractValue(const String line, const String key);
+  void updateDisplay();
 
 public:
-  MsgReceiverTask(MsgServiceClass& service, bool& mode, int& pos, float& temp);
-  void init(int period) override;
-  void tick() override;
+  MsgReceiverTask(MsgServiceClass* service, bool mode, int pos, float temp, LCDDisplayI2C* lcd);
+  void tick();
 };
 
 #endif
