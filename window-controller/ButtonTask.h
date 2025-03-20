@@ -5,15 +5,15 @@
 #include "Config.h"
 
 class ButtonTask : public Task {
-  const int pin;
-  bool& manualMode;
+  int pin;
+  bool manualMode;
   bool lastState;
   unsigned long lastPressTime;
 
 public:
-  ButtonTask(int p, bool& mode);
-  void init(int period) override;
-  void tick() override;
+  ButtonTask(int p, bool mode);
+  void tick();
+
 };
 
 #endif

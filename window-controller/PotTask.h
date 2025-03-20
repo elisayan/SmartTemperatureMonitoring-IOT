@@ -3,18 +3,15 @@
 
 #include "Task.h"
 #include "Config.h"
-#include "MsgService.h"
 
 class PotTask : public Task {
-  const int pin;
-  int& windowPosition;
-  bool& manualMode;
-  MsgServiceClass& msgService;
+  int pin;
+  int windowPosition;
+  bool manualMode;
 
 public:
-  PotTask(int p, int& pos, bool& mode, MsgServiceClass& service);
-  void init(int period) override;
-  void tick() override;
+  PotTask(int p, int pos, bool mode);
+  void tick();
 };
 
 #endif
