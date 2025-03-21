@@ -2,16 +2,19 @@ const ctx = document.getElementById('tempChart').getContext('2d');
 const chart = new Chart(ctx, {
     type: 'line',
     data: {
-        labels: [],
+        labels: [], // Etichette per l'asse X (tempi)
         datasets: [{
             label: 'Temperature (°C)',
-            data: [],
-            borderColor: 'rgb(75, 192, 192)',
-            fill: false
+            data: [], // Dati per l'asse Y (temperature medie)
+            borderColor: 'rgb(75, 192, 192)', // Colore della linea
+            fill: false, // Non riempire l'area sotto la linea
+            pointRadius: 5, // Dimensione dei punti
+            pointBackgroundColor: 'rgb(75, 192, 192)' // Colore dei punti
         }]
     },
     options: {
         responsive: true,
+        animation: false, // Disabilita le animazioni
         scales: {
             x: {
                 display: true,
@@ -25,7 +28,9 @@ const chart = new Chart(ctx, {
                 title: {
                     display: true,
                     text: 'Temperature (°C)'
-                }
+                },
+                suggestedMin: 10, // Valore minimo dell'asse Y
+                suggestedMax: 30  // Valore massimo dell'asse Y
             }
         }
     }
@@ -69,15 +74,43 @@ async function updateWindowPosition(position) {
     }
 }
 
+// async function update() {
+//     try {
+//         const res = await fetch('http://localhost:8080/api/data');
+//         const data = await res.json();
+        
+//         chart.data.labels = data.map(d => new Date(d.time).toLocaleTimeString());
+//         chart.data.datasets[0].data = data.map(d => d.value);
+//         chart.update();
+        
+//         const stateRes = await fetch('http://localhost:8080/api/state');
+//         const state = await stateRes.json();
+//         document.getElementById('mode').textContent = state.mode;
+//         document.getElementById('window').textContent = state.window.toFixed(2);
+//         document.getElementById('state').textContent = state.state;
+//         updateButtonText(state.mode);
+//     } catch (error) {
+//         console.error('Error updating data:', error);
+//     }
+// }
+
 async function update() {
     try {
         const res = await fetch('http://localhost:8080/api/data');
         const data = await res.json();
-        
-        chart.data.labels = data.map(d => new Date(d.time).toLocaleTimeString());
-        chart.data.datasets[0].data = data.map(d => d.value);
+
+        const currentTime = new Date().toLocaleTimeString();
+        chart.data.labels.push(currentTime);
+        chart.data.datasets[0].data.push(data.averageTemperature);
+
+        const maxDataPoints = 10;
+        if (chart.data.labels.length > maxDataPoints) {
+            chart.data.labels.shift();
+            chart.data.datasets[0].data.shift();
+        }
+
         chart.update();
-        
+
         const stateRes = await fetch('http://localhost:8080/api/state');
         const state = await stateRes.json();
         document.getElementById('mode').textContent = state.mode;

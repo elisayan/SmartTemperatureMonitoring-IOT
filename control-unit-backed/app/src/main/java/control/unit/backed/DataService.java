@@ -78,13 +78,34 @@ public class DataService extends AbstractVerticle {
         }
     }
 
+    // private void handleGetTemperatureData(RoutingContext ctx) {
+    // JsonArray arr = new JsonArray();
+    // temperatureData.forEach(p -> {
+    // arr.add(new JsonObject()
+    // .put("time", p.getTime())
+    // .put("value", p.getValue()));
+    // });
+    // ctx.response()
+    // .putHeader("content-type", "application/json")
+    // .end(arr.encodePrettily());
+    // }
+
     private void handleGetTemperatureData(RoutingContext ctx) {
+        int n = 5;
+        double averageTemperature = calculateAverage(n);
+
+        // JsonObject response = new JsonObject()
+        // .put("averageTemperature", averageTemperature)
+        // .put("numberOfDataPoints", n);
+
         JsonArray arr = new JsonArray();
+
         temperatureData.forEach(p -> {
-            arr.add(new JsonObject()
-                    .put("time", p.getTime())
-                    .put("value", p.getValue()));
+            arr.add(new JsonObject().put("time", p.getTime())
+                    .put("averageTemperature", averageTemperature)
+                    .put("numberOfDataPoints", n));
         });
+
         ctx.response()
                 .putHeader("content-type", "application/json")
                 .end(arr.encodePrettily());
@@ -115,15 +136,30 @@ public class DataService extends AbstractVerticle {
         ctx.response().end("OK");
     }
 
+    private double calculateAverage(int n) {
+        if (temperatureData.isEmpty() || n <= 0) {
+            return 0.0;
+        }
+
+        int size = Math.min(n, temperatureData.size());
+        double sum = 0.0;
+
+        for (int i = temperatureData.size() - size; i < temperatureData.size(); i++) {
+            sum += temperatureData.get(i).getValue();
+        }
+
+        return sum / size;
+    }
+
     public void updateWindow(int windowPos) {
         dashboardPosition = windowPos;
     }
 
-    public void updateState(String state){
+    public void updateState(String state) {
         dashboardState = state;
     }
 
-    public void updateMode(String mode){
+    public void updateMode(String mode) {
         dashboardMode = mode;
     }
 

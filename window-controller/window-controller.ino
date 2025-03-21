@@ -36,9 +36,9 @@ void setup() {
   Task* btnTask = new ButtonTask(BUTTON_PIN, manualMode);
   Task* potTask = new PotTask(POT_PIN, windowPosition, manualMode);
 
-  msgTask->init(100);
-  btnTask->init(50);
-  potTask->init(200);
+  msgTask->init(1000);
+  btnTask->init(100);
+  potTask->init(1000);
 
   scheduler.addTask(msgTask);
   scheduler.addTask(btnTask);
