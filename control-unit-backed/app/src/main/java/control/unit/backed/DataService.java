@@ -4,7 +4,6 @@ import io.vertx.ext.web.handler.CorsHandler;
 import io.vertx.core.AbstractVerticle;
 import io.vertx.core.http.HttpHeaders;
 import io.vertx.core.http.HttpMethod;
-import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.Router;
 import io.vertx.ext.web.RoutingContext;
@@ -78,37 +77,17 @@ public class DataService extends AbstractVerticle {
         }
     }
 
-    // private void handleGetTemperatureData(RoutingContext ctx) {
-    // JsonArray arr = new JsonArray();
-    // temperatureData.forEach(p -> {
-    // arr.add(new JsonObject()
-    // .put("time", p.getTime())
-    // .put("value", p.getValue()));
-    // });
-    // ctx.response()
-    // .putHeader("content-type", "application/json")
-    // .end(arr.encodePrettily());
-    // }
-
     private void handleGetTemperatureData(RoutingContext ctx) {
         int n = 5;
         double averageTemperature = calculateAverage(n);
 
-        // JsonObject response = new JsonObject()
-        // .put("averageTemperature", averageTemperature)
-        // .put("numberOfDataPoints", n);
-
-        JsonArray arr = new JsonArray();
-
-        temperatureData.forEach(p -> {
-            arr.add(new JsonObject().put("time", p.getTime())
-                    .put("averageTemperature", averageTemperature)
-                    .put("numberOfDataPoints", n));
-        });
+        JsonObject response = new JsonObject()
+        .put("averageTemperature", averageTemperature)
+        .put("numberOfDataPoints", n);
 
         ctx.response()
                 .putHeader("content-type", "application/json")
-                .end(arr.encodePrettily());
+                .end(response.encodePrettily());
     }
 
     private void handleGetCurrentState(RoutingContext ctx) {

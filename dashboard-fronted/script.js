@@ -2,19 +2,18 @@ const ctx = document.getElementById('tempChart').getContext('2d');
 const chart = new Chart(ctx, {
     type: 'line',
     data: {
-        labels: [], // Etichette per l'asse X (tempi)
+        labels: [],
         datasets: [{
             label: 'Temperature (°C)',
-            data: [], // Dati per l'asse Y (temperature medie)
-            borderColor: 'rgb(75, 192, 192)', // Colore della linea
-            fill: false, // Non riempire l'area sotto la linea
-            pointRadius: 5, // Dimensione dei punti
-            pointBackgroundColor: 'rgb(75, 192, 192)' // Colore dei punti
+            data: [],
+            borderColor: 'rgb(75, 192, 192)',
+            fill: false,
+            pointRadius: 5,
+            pointBackgroundColor: 'rgb(75, 192, 192)'
         }]
     },
     options: {
         responsive: true,
-        animation: false, // Disabilita le animazioni
         scales: {
             x: {
                 display: true,
@@ -29,8 +28,8 @@ const chart = new Chart(ctx, {
                     display: true,
                     text: 'Temperature (°C)'
                 },
-                suggestedMin: 10, // Valore minimo dell'asse Y
-                suggestedMax: 30  // Valore massimo dell'asse Y
+                suggestedMin: 10,
+                suggestedMax: 30
             }
         }
     }
