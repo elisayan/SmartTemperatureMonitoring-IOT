@@ -8,20 +8,25 @@ import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.Router;
 import io.vertx.ext.web.RoutingContext;
 import io.vertx.ext.web.handler.BodyHandler;
-import java.util.concurrent.CopyOnWriteArrayList;
+
+import java.util.LinkedList;
+import java.util.List;
 
 public class DataService extends AbstractVerticle {
-    private int port;
     private static final int MAX_SIZE = 50;
-    private CopyOnWriteArrayList<DataPoint> temperatureData;
+    private static final int N = 5;
+
+    private int port;
+    private List<DataPoint> averageData;
+    private List<DataPoint> temperatureData = new LinkedList<>();
     private String lastManualCommandSource = null;
     private Controller controller;
     private String dashboardMode = "AUTOMATIC";
-    private int dashboardPosition = 0;
     private String dashboardState = "NORMAL";
+    private int dashboardPosition = 0;
 
     public DataService(int port) throws Exception {
-        temperatureData = new CopyOnWriteArrayList<>();
+        averageData = new LinkedList<>();
         this.port = port;
     }
 
@@ -38,7 +43,6 @@ public class DataService extends AbstractVerticle {
 
         router.route().handler(BodyHandler.create());
 
-        router.post("/api/data").handler(this::handleAddNewData);
         router.get("/api/data").handler(this::handleGetTemperatureData);
 
         router.get("/api/state").handler(this::handleGetCurrentState);
@@ -53,41 +57,28 @@ public class DataService extends AbstractVerticle {
     }
 
     public void addTemperatureData(double temp) {
-        temperatureData.addLast(new DataPoint(temp, System.currentTimeMillis(), "sensor"));
-        if (temperatureData.size() > MAX_SIZE) {
-            temperatureData.removeFirst();
-        }
-    }
-
-    private void handleAddNewData(RoutingContext ctx) {
-        JsonObject body = ctx.body().asJsonObject();
-        if (body != null) {
-            double value = body.getDouble("value");
-            String place = body.getString("place", "unknown");
-            long time = System.currentTimeMillis();
-
-            temperatureData.addLast(new DataPoint(value, time, place));
-            if (temperatureData.size() > MAX_SIZE) {
-                temperatureData.removeFirst();
-            }
-
-            ctx.response().setStatusCode(200).end();
-        } else {
-            ctx.response().setStatusCode(400).end("Invalid data");
-        }
+        temperatureData.add(new DataPoint(temp, System.currentTimeMillis(), "sensor"));
+        updateAverageData();
     }
 
     private void handleGetTemperatureData(RoutingContext ctx) {
-        int n = 5;
-        double averageTemperature = calculateAverage(n);
+        if (temperatureData.size() == N) {
+            double lastAverage = averageData.getLast().getValue();
 
-        JsonObject response = new JsonObject()
-        .put("averageTemperature", averageTemperature)
-        .put("numberOfDataPoints", n);
+            JsonObject response = new JsonObject()
+                    .put("averageTemperature", lastAverage)
+                    .put("numberOfDataPoints", temperatureData.size());
 
-        ctx.response()
-                .putHeader("content-type", "application/json")
-                .end(response.encodePrettily());
+            ctx.response()
+                    .putHeader("content-type", "application/json")
+                    .end(response.encodePrettily());
+
+            temperatureData.clear();
+        } else {
+            ctx.response()
+                    .setStatusCode(404)
+                    .end("No data available");
+        }
     }
 
     private void handleGetCurrentState(RoutingContext ctx) {
@@ -115,19 +106,29 @@ public class DataService extends AbstractVerticle {
         ctx.response().end("OK");
     }
 
-    private double calculateAverage(int n) {
-        if (temperatureData.isEmpty() || n <= 0) {
+    private double calculateAverage() {
+        if (temperatureData.isEmpty()) {
             return 0.0;
         }
 
-        int size = Math.min(n, temperatureData.size());
         double sum = 0.0;
-
-        for (int i = temperatureData.size() - size; i < temperatureData.size(); i++) {
-            sum += temperatureData.get(i).getValue();
+        for (DataPoint data : temperatureData) {
+            sum += data.getValue();
         }
 
-        return sum / size;
+        return sum / temperatureData.size();
+    }
+
+    private void updateAverageData() {
+        if (temperatureData.size() == N) {
+            double average = calculateAverage();
+
+            averageData.add(new DataPoint(average, System.currentTimeMillis(), "average"));
+
+            if (averageData.size() > MAX_SIZE) {
+                averageData.removeFirst();
+            }
+        }
     }
 
     public void updateWindow(int windowPos) {
