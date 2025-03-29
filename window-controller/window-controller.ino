@@ -1,5 +1,5 @@
-#include <LiquidCrystal_I2C.h>
 #include "Scheduler.h"
+#include "WindowControllerPlant.h"
 #include "ServoMotor.h"
 #include "Config.h"
 #include "MsgService.h"
@@ -8,6 +8,8 @@
 #include "PotTask.h"
 #include "LCDDisplayI2C.h"
 
+Scheduler scheduler;
+WindowControllerPlant windowPlant;
 LCDDisplayI2C* lcd;
 ServoMotor* windowServo(SERVO_PIN);
 
@@ -15,14 +17,11 @@ bool manualMode = false;
 int windowPosition = 0;
 float currentTemperature = 0.0;
 
-Scheduler scheduler;
-
 void setup() {
   Serial.begin(115200);
   MsgService.init();
 
   lcd = new LCDDisplayI2C();
-  windowServo = new ServoMotor(SERVO_PIN);
   
   lcd->updateData(manualMode, windowPosition, currentTemperature);
   windowServo->on();
