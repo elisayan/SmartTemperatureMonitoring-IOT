@@ -2,15 +2,13 @@
 #define __POT_TASK__
 
 #include "Task.h"
-#include "Config.h"
+#include "WindowControllerPlant.h"
 
 class PotTask : public Task {
-  int pin;
-  int windowPosition;
-  bool manualMode;
+  WindowControllerPlant* pPlant;
 
 public:
-  PotTask(int p, int pos, bool mode);
+  PotTask(WindowControllerPlant* pPlant);
   void tick();
 };
 
