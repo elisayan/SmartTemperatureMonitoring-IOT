@@ -9,31 +9,21 @@
 #include "LCDDisplayI2C.h"
 
 Scheduler scheduler;
-WindowControllerPlant windowPlant;
+WindowControllerPlant* windowPlant;
 LCDDisplayI2C* lcd;
-ServoMotor* windowServo(SERVO_PIN);
-
-bool manualMode = false;
-int windowPosition = 0;
-float currentTemperature = 0.0;
 
 void setup() {
   Serial.begin(115200);
+
+  windowPlant = new WindowControllerPlant();
+
   MsgService.init();
-
-  lcd = new LCDDisplayI2C();
-  
-  lcd->updateData(manualMode, windowPosition, currentTemperature);
-  windowServo->on();
-
-  Serial.print("Buffer size: ");
-  Serial.println(SERIAL_RX_BUFFER_SIZE);
-
+  windowPlant->init();
   scheduler.init(100);
 
-  Task* msgTask = new MsgReceiverTask(manualMode, windowPosition, currentTemperature, lcd);
-  Task* btnTask = new ButtonTask(BUTTON_PIN, manualMode);
-  Task* potTask = new PotTask(POT_PIN, windowPosition, manualMode);
+  Task* msgTask = new MsgReceiverTask(windowPlant);
+  Task* btnTask = new ButtonTask(windowPlant);
+  Task* potTask = new PotTask(windowPlant);
 
   msgTask->init(1000);
   btnTask->init(100);
@@ -46,6 +36,4 @@ void setup() {
 
 void loop() {
   scheduler.schedule();
-  windowServo->setPosition(windowPosition);
-  delay(2000);
 }
