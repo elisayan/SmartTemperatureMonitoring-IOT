@@ -7,12 +7,23 @@ LCDDisplayI2C::LCDDisplayI2C()
   lcd.backlight();
 }
 
-void LCDDisplayI2C::updateData(bool manualMode, int windowPosition, float currentTemperature) {
+void LCDDisplayI2C::updateAutoData(int windowPosition) {
   lcd.clear();
 
   lcd.setCursor(0, 0);
-  lcd.print("Mode: ");
-  lcd.print(manualMode ? "MANUAL" : "AUTOMATIC");
+  lcd.print("Mode: AUTOMATIC");
+
+  lcd.setCursor(0, 1);
+  lcd.print("Window: ");
+  lcd.print(windowPosition);
+  lcd.print("%");
+}
+
+void LCDDisplayI2C::updateManualData(int windowPosition, float currentTemperature) {
+  lcd.clear();
+
+  lcd.setCursor(0, 0);
+  lcd.print("Mode: MANUAL");
 
   lcd.setCursor(0, 1);
   lcd.print("Window: ");

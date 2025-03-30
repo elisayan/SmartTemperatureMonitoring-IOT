@@ -6,7 +6,8 @@
 class LCDDisplayI2C {
 public:
   LCDDisplayI2C();
-  void updateData(bool manualMode, int windowPosition, float currentTemperature);
+  void updateAutoData(int windowPosition);
+  void updateManualData(int windowPosition, float currentTemperature);
 
 private:
   LiquidCrystal_I2C lcd;
