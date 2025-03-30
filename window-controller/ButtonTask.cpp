@@ -1,24 +1,22 @@
 #include "ButtonTask.h"
 #include "Arduino.h"
 
-ButtonTask::ButtonTask(int p, bool mode) {
-  this->pin = p;
-  this->manualMode = mode;
-  pinMode(pin, INPUT);
+ButtonTask::ButtonTask(WindowControllerPlant* pPlant) {
+  this->pPlant = pPlant;
+  this->lastState = LOW;
+  this->lastPressTime = 0;
 }
 
 void ButtonTask::tick() {
-  bool currentState = digitalRead(pin);
-  if (currentState == HIGH && lastState == LOW && (millis() - lastPressTime) > 200) {
-    manualMode = !manualMode;
+  bool currentState = pPlant->isButtonPressed();
+
+  if (currentState && !lastState && (millis() - lastPressTime) > 200) {
+    pPlant->handleButtonPress();
     lastPressTime = millis();
 
     Serial.println("SOURCE:ARDUINO");
-    if (manualMode) {
-      Serial.println("MODE:MANUAL");
-    } else {
-      Serial.println("MODE:AUTOMATIC");
-    }
+    Serial.print("MODE:");
+    Serial.println(pPlant->isInManualMode() ? "MANUAL" : "AUTOMATIC");
   }
 
   lastState = currentState;

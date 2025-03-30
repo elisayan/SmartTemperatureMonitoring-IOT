@@ -2,18 +2,16 @@
 #define __BUTTON_TASK__
 
 #include "Task.h"
-#include "Config.h"
+#include "WindowControllerPlant.h"
 
 class ButtonTask : public Task {
-  int pin;
-  bool manualMode;
+  WindowControllerPlant* pPlant;
   bool lastState;
   unsigned long lastPressTime;
 
 public:
-  ButtonTask(int p, bool mode);
+  ButtonTask(WindowControllerPlant* pPlant);
   void tick();
-
 };
 
 #endif
