@@ -5,12 +5,15 @@ WindowControllerPlant::WindowControllerPlant() {
   pMotor = new ServoMotor(SERVO_PIN);
   pButton = new ButtonImpl(BUTTON_PIN);
   pPot = new Potentiometer(POT_PIN);
+  pLcd = new LCDDisplayI2C();
 }
 
 void WindowControllerPlant::init() {
-  pMotor->on();
   currentOpening = 0;
+  currentTemperature = 0.0;
   manualMode = false;
+  pLcd->updateAutoData(currentOpening);
+  pMotor->on();
   state = IDLE;
 }
 
@@ -33,6 +36,7 @@ bool WindowControllerPlant::isInManualMode() {
 void WindowControllerPlant::setWindowOpening(int percentage) {
   pMotor->setPosition(percentage);
   currentOpening = percentage;
+  updateDisplay();
   state = MOVING_WINDOW;
 }
 
@@ -47,10 +51,35 @@ bool WindowControllerPlant::isButtonPressed() {
 void WindowControllerPlant::handleButtonPress() {
   state = BUTTON_PRESSED;
   manualMode = !manualMode;
+  updateDisplay();
   if (manualMode) {
     switchToManualMode();
   } else {
     switchToAutomaticMode();
+  }
+}
+
+void WindowControllerPlant::setCurrentTemperature(float temp) {
+  currentTemperature = temp;
+  if (isInManualMode()) {
+    updateDisplay();
+  }
+}
+
+void WindowControllerPlant::updateDisplay() {
+  static int lastOpening = -1;
+  static float lastTemp = -100;
+  static bool lastMode = false;
+
+  if (lastOpening != currentOpening || lastTemp != currentTemperature || lastMode != manualMode) {
+    if (manualMode) {
+      pLcd->updateManualData(currentOpening, currentTemperature);
+    } else {
+      pLcd->updateAutoData(currentOpening);
+    }
+    lastOpening = currentOpening;
+    lastTemp = currentTemperature;
+    lastMode = manualMode;
   }
 }
 

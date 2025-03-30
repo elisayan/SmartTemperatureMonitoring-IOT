@@ -24,8 +24,10 @@ public:
   bool isButtonPressed();
   void handleButtonPress();
 
+  void setCurrentTemperature(float temp);
+  float getCurrentTemperature();
+
   void updateDisplay();
-  void displayTemperature(float temp);
 
   int getState();
   const char* getStateName();
@@ -45,6 +47,7 @@ private:
   ButtonImpl* pButton;
   Potentiometer* pPot;
   int currentOpening;
+  float currentTemperature;
   bool manualMode;
   unsigned long lastUpdateTime;
 };
