@@ -33,19 +33,12 @@ bool WindowControllerPlant::isInManualMode() {
   return state == MANUAL_MODE;
 }
 
-void WindowControllerPlant::setWindowOpening(int percentage) {
-  pMotor->setPosition(percentage);
-  currentOpening = percentage;
-  updateDisplay();
-  state = MOVING_WINDOW;
-}
-
 int WindowControllerPlant::readPotentiometer() {
   return pPot->getValue();
 }
 
 void WindowControllerPlant::setWindowFromPotentiometer() {
-  if (isInManualMode()) {
+  if (manualMode) {
     int potValue = readPotentiometer();
     int newPos = map(potValue, 0, 1023, 0, 100);
 
@@ -53,6 +46,13 @@ void WindowControllerPlant::setWindowFromPotentiometer() {
       setWindowOpening(newPos);
     }
   }
+}
+
+void WindowControllerPlant::setWindowOpening(int percentage) {
+  pMotor->setPosition(percentage);
+  currentOpening = percentage;
+  updateDisplay();
+  state = MOVING_WINDOW;
 }
 
 bool WindowControllerPlant::isButtonPressed() {
