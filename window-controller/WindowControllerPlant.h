@@ -18,10 +18,11 @@ public:
   bool isInManualMode();
 
   void setWindowOpening(int percentage);
-
   int readPotentiometer();
+  void setWindowFromPotentiometer();
 
   bool isButtonPressed();
+  void checkButtonState();
   void handleButtonPress();
 
   void setCurrentTemperature(float temp);

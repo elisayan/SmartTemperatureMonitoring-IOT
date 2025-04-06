@@ -6,8 +6,6 @@
 
 class ButtonTask : public Task {
   WindowControllerPlant* pPlant;
-  bool lastState;
-  unsigned long lastPressTime;
 
 public:
   ButtonTask(WindowControllerPlant* pPlant);

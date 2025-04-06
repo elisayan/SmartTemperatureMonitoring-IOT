@@ -44,8 +44,31 @@ int WindowControllerPlant::readPotentiometer() {
   return pPot->getValue();
 }
 
+void WindowControllerPlant::setWindowFromPotentiometer() {
+  if (isInManualMode()) {
+    int potValue = readPotentiometer();
+    int newPos = map(potValue, 0, 1023, 0, 100);
+
+    if (newPos != currentOpening) {
+      setWindowOpening(newPos);
+    }
+  }
+}
+
 bool WindowControllerPlant::isButtonPressed() {
   return state == BUTTON_PRESSED;
+}
+
+void WindowControllerPlant::checkButtonState() {
+  pButton->sync();
+
+  if (pButton->isClicked()) {
+    handleButtonPress();
+
+    Serial.println("SOURCE:ARDUINO");
+    Serial.print("MODE:");
+    Serial.println(isInManualMode() ? "MANUAL" : "AUTOMATIC");
+  }
 }
 
 void WindowControllerPlant::handleButtonPress() {
@@ -67,19 +90,10 @@ void WindowControllerPlant::setCurrentTemperature(float temp) {
 }
 
 void WindowControllerPlant::updateDisplay() {
-  static int lastOpening = -1;
-  static float lastTemp = -100;
-  static bool lastMode = false;
-
-  if (lastOpening != currentOpening || lastTemp != currentTemperature || lastMode != manualMode) {
-    if (manualMode) {
-      pLcd->updateManualData(currentOpening, currentTemperature);
-    } else {
-      pLcd->updateAutoData(currentOpening);
-    }
-    lastOpening = currentOpening;
-    lastTemp = currentTemperature;
-    lastMode = manualMode;
+  if (manualMode) {
+    pLcd->updateManualData(currentOpening, currentTemperature);
+  } else {
+    pLcd->updateAutoData(currentOpening);
   }
 }
 
