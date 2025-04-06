@@ -14,6 +14,8 @@ void WindowControllerPlant::init() {
   manualMode = false;
   pLcd->updateAutoData(currentOpening);
   pMotor->on();
+  Serial.print("MODE:");
+  Serial.println(isInManualMode() ? "MANUAL" : "AUTOMATIC");
   state = IDLE;
 }
 
@@ -44,6 +46,8 @@ void WindowControllerPlant::setWindowFromPotentiometer() {
 
     if (newPos != currentOpening) {
       setWindowOpening(newPos);
+      Serial.print("POS:");
+      Serial.println(newPos);
     }
   }
 }
