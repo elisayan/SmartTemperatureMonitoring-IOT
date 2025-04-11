@@ -69,7 +69,6 @@ void WindowControllerPlant::checkButtonState() {
   if (pButton->isClicked()) {
     handleButtonPress();
 
-    Serial.println("SOURCE:ARDUINO");
     Serial.print("MODE:");
     Serial.println(isInManualMode() ? "MANUAL" : "AUTOMATIC");
   }
@@ -96,28 +95,5 @@ void WindowControllerPlant::updateDisplay() {
     pLcd->updateManualData(currentOpening, currentTemperature);
   } else {
     pLcd->updateAutoData(currentOpening);
-  }
-}
-
-int WindowControllerPlant::getState() {
-  return state;
-}
-
-const char* WindowControllerPlant::getStateName() {
-  switch (state) {
-    case IDLE:
-      return "IDLE";
-    case AUTOMATIC_MODE:
-      return "AUTOMATIC_MODE";
-    case MANUAL_MODE:
-      return "MANUAL_MODE";
-    case UPDATE_DISPLAY:
-      return "UPDATE_DISPLAY";
-    case MOVING_WINDOW:
-      return "MOVING_WINDOW";
-    case BUTTON_PRESSED:
-      return "BUTTON_PRESSED";
-    default:
-      return "UNKNOWN";
   }
 }

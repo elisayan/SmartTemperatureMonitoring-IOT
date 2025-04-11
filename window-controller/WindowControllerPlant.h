@@ -30,9 +30,6 @@ public:
 
   void updateDisplay();
 
-  int getState();
-  const char* getStateName();
-
 private:
   enum {
     IDLE,

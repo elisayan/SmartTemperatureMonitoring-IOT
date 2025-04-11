@@ -27,23 +27,9 @@ public class Controller {
     public void receiveMsg(String msg) {
         if (msg.startsWith("MODE:")) {
             arduino_mode = msg.split(":")[1].trim();
-            // dataService.handleModeChange(mode);
-            // } else if (msg.startsWith("TEMP:")) {
-            // temperature = Double.parseDouble(msg.split(":")[1].trim());
         } else if (msg.startsWith("POS:")) {
-            pos = Integer.parseInt(msg.split(":")[1].trim());
+            arduino_pos = Integer.parseInt(msg.split(":")[1].trim());
         }
-            // } else if (msg.startsWith("SOURCE:")) {
-        //     String source = msg.split(":")[1].trim();
-        //     if (source.equals("ARDUINO")) {
-        //         synchronizeDataServiceWithArduino();
-        //     }
-        //     // else if (source.equals("DATASERVICE")) {
-        //     // synchronizeArduinoWithDataService();
-        //     // }
-        // } else if (msg.startsWith("MsgService")) {
-        //     System.out.println("RECEIVED: " + msg.split(" ")[1].trim());
-        // }
     }
 
     private void sendMode(String mode) {
