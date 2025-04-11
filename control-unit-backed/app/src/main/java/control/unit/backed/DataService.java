@@ -9,6 +9,7 @@ import io.vertx.ext.web.Router;
 import io.vertx.ext.web.RoutingContext;
 import io.vertx.ext.web.handler.BodyHandler;
 
+import java.time.LocalDateTime;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -24,6 +25,8 @@ public class DataService extends AbstractVerticle {
     private String dashboardMode = "AUTOMATIC";
     private String dashboardState = "NORMAL";
     private int dashboardPosition = 0;
+
+    private LocalDateTime dashboardModeLastModified;
 
     public DataService(int port) throws Exception {
         averageData = new LinkedList<>();
@@ -98,10 +101,10 @@ public class DataService extends AbstractVerticle {
         }
 
         dashboardMode = body.getString("mode");
+        dashboardModeLastModified = LocalDateTime.now();
+
         dashboardPosition = dashboardMode.equals("MANUAL") ? body.getInteger("position") : dashboardPosition;
         dashboardState = body.getString("source", "Dashboard");
-
-        controller.synchronizeArduinoWithDataService();
 
         ctx.response().end("OK");
     }
@@ -145,6 +148,10 @@ public class DataService extends AbstractVerticle {
 
     public String getCurrentMode() {
         return dashboardMode;
+    }
+
+    public LocalDateTime getModeLastModifiedTime(){
+        return dashboardModeLastModified;
     }
 
     public int getDashboardPosition() {
