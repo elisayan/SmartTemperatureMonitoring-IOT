@@ -1,5 +1,8 @@
 package control.unit.backed;
 
+import java.time.LocalDateTime;
+import java.util.Objects;
+
 public class Controller {
 
     private static final String PORT = "COM3";
@@ -10,9 +13,11 @@ public class Controller {
     private final SerialCommChannel serialChannel;
 
     private String arduino_mode = null;
+    private LocalDateTime arduinoModeLastModified;
     private String mode = null;
-    // private double temperature = -1;
+
     private int arduino_pos = -1;
+    private LocalDateTime arduinoPosLastModified;
     private int pos = -1;
 
     public Controller(MQTTAgent mqtt, DataService dataService) throws Exception {
@@ -27,9 +32,46 @@ public class Controller {
     public void receiveMsg(String msg) {
         if (msg.startsWith("MODE:")) {
             arduino_mode = msg.split(":")[1].trim();
+            arduinoModeLastModified = LocalDateTime.now();
         } else if (msg.startsWith("POS:")) {
             arduino_pos = Integer.parseInt(msg.split(":")[1].trim());
+            arduinoPosLastModified = LocalDateTime.now();
         }
+    }
+
+    public void updateDashboardData(double temp, int position, String state) {
+        dataService.addTemperatureData(temp);
+        dataService.updateWindow(position);
+        dataService.updateState(state);
+    }
+
+    public void updateArduinoData(double temp, int position) {
+        mode = synchronizeMode();
+
+        if (mode.equals("MANUAL")) {
+            sendTemperature(temp);
+            pos = arduino_pos;
+            System.out.println("manual system updated-> temp: " + temp + " pos: " + pos);
+        } else if (mode.equals("AUTOMATIC")) {
+            sendPosition(position);
+            System.out.println("automatic system updated-> pos: " + position);
+        }
+    }
+
+    private String synchronizeMode() {
+        LocalDateTime arduinoTime = arduinoModeLastModified;
+        LocalDateTime serviceTime = dataService.getModeLastModifiedTime();
+
+        if (!Objects.equals(arduino_mode, dataService.getCurrentMode())) {
+            if (arduinoTime == null || serviceTime == null) {
+                return arduino_mode;
+            }
+    
+            return arduinoTime.isAfter(serviceTime)
+                    ? arduino_mode
+                    : dataService.getCurrentMode();
+        }
+        return arduino_mode;
     }
 
     private void sendMode(String mode) {
@@ -42,37 +84,5 @@ public class Controller {
 
     private void sendPosition(int pos) {
         this.serialChannel.sendMsg("POS:" + pos);
-    }
-
-    private void sendSource(String source) {
-        this.serialChannel.sendMsg("SOURCE:" + source);
-    }
-
-    private void synchronizeDataServiceWithArduino() {
-        this.dataService.updateMode(mode);
-        this.dataService.updateWindow(pos);
-        System.out.println("DASHBOARD SYCRON: " + "MODE: " + mode + " POS: " + pos);
-    }
-
-    public void synchronizeArduinoWithDataService() {
-        // sendSource("DATASERVICE");
-        // sendMode(this.dataService.getCurrentMode());
-        // sendPosition(this.dataService.getDashboardPosition());
-    }
-
-    public void updateSystem(double temp, int position, String state) {
-        // this.dataService.addTemperatureData(temp);
-        // this.dataService.updateWindow(position);
-        // this.dataService.updateState(state);
-
-        if (arduino_mode.equals("MANUAL")) {
-            sendTemperature(temp);
-            pos = arduino_pos;
-            System.out.println("UPDATE MANUAL TEMP");
-        }
-        sendPosition(position);
-
-        System.out.println(
-                "UPDATE: " + "MODE: " + arduino_mode + " TEMP: " + temp + " POS: " + position + " STATE: " + state);
     }
 }
