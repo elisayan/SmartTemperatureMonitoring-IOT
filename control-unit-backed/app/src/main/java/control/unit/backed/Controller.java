@@ -9,9 +9,11 @@ public class Controller {
     private final DataService dataService;
     private final SerialCommChannel serialChannel;
 
+    private String arduino_mode = null;
     private String mode = null;
     // private double temperature = -1;
-    private int windowPosition = -1;
+    private int arduino_pos = -1;
+    private int pos = -1;
 
     public Controller(MQTTAgent mqtt, DataService dataService) throws Exception {
         this.mqtt = mqtt;
@@ -24,23 +26,24 @@ public class Controller {
 
     public void receiveMsg(String msg) {
         if (msg.startsWith("MODE:")) {
-            mode = msg.split(":")[1].trim();
+            arduino_mode = msg.split(":")[1].trim();
             // dataService.handleModeChange(mode);
             // } else if (msg.startsWith("TEMP:")) {
             // temperature = Double.parseDouble(msg.split(":")[1].trim());
         } else if (msg.startsWith("POS:")) {
-            windowPosition = Integer.parseInt(msg.split(":")[1].trim());
-        } else if (msg.startsWith("SOURCE:")) {
-            String source = msg.split(":")[1].trim();
-            if (source.equals("ARDUINO")) {
-                synchronizeDataServiceWithArduino();
-            }
-            // else if (source.equals("DATASERVICE")) {
-            // synchronizeArduinoWithDataService();
-            // }
-        } else if (msg.startsWith("MsgService")) {
-            System.out.println("RECEIVED: "+msg.split(" ")[1].trim());
+            pos = Integer.parseInt(msg.split(":")[1].trim());
         }
+            // } else if (msg.startsWith("SOURCE:")) {
+        //     String source = msg.split(":")[1].trim();
+        //     if (source.equals("ARDUINO")) {
+        //         synchronizeDataServiceWithArduino();
+        //     }
+        //     // else if (source.equals("DATASERVICE")) {
+        //     // synchronizeArduinoWithDataService();
+        //     // }
+        // } else if (msg.startsWith("MsgService")) {
+        //     System.out.println("RECEIVED: " + msg.split(" ")[1].trim());
+        // }
     }
 
     private void sendMode(String mode) {
@@ -61,31 +64,29 @@ public class Controller {
 
     private void synchronizeDataServiceWithArduino() {
         this.dataService.updateMode(mode);
-        this.dataService.updateWindow(windowPosition);
-        System.out.println("DASHBOARD SYCRON: " + "MODE: " + mode + " POS: " + windowPosition);
+        this.dataService.updateWindow(pos);
+        System.out.println("DASHBOARD SYCRON: " + "MODE: " + mode + " POS: " + pos);
     }
 
     public void synchronizeArduinoWithDataService() {
-        sendSource("DATASERVICE");
-        sendMode(this.dataService.getCurrentMode());
-        sendPosition(this.dataService.getDashboardPosition());
+        // sendSource("DATASERVICE");
+        // sendMode(this.dataService.getCurrentMode());
+        // sendPosition(this.dataService.getDashboardPosition());
     }
 
     public void updateSystem(double temp, int position, String state) {
-        this.dataService.addTemperatureData(temp);
-        this.dataService.updateWindow(position);
-        this.dataService.updateState(state);
+        // this.dataService.addTemperatureData(temp);
+        // this.dataService.updateWindow(position);
+        // this.dataService.updateState(state);
 
-        try {
-            sendSource("ARDUINO");
-            sendMode(this.mode);
+        if (arduino_mode.equals("MANUAL")) {
             sendTemperature(temp);
-            sendPosition(position);
-        } catch (Exception e) {
-            System.err.println("Errore durante l'invio dei messaggi ad arduino");
+            pos = arduino_pos;
+            System.out.println("UPDATE MANUAL TEMP");
         }
+        sendPosition(position);
 
         System.out.println(
-                "UPDATE: " + "MODE: " + this.mode + " TEMP: " + temp + " POS: " + position + " STATE: " + state);
+                "UPDATE: " + "MODE: " + arduino_mode + " TEMP: " + temp + " POS: " + position + " STATE: " + state);
     }
 }
