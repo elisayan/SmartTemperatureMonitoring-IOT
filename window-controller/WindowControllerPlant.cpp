@@ -78,19 +78,17 @@ void WindowControllerPlant::checkButtonState() {
 void WindowControllerPlant::handleButtonPress() {
   state = BUTTON_PRESSED;
   manualMode = !manualMode;
-  updateDisplay();
   if (manualMode) {
     switchToManualMode();
   } else {
     switchToAutomaticMode();
   }
+  updateDisplay();
 }
 
 void WindowControllerPlant::setCurrentTemperature(float temp) {
   currentTemperature = temp;
-  if (isInManualMode()) {
-    updateDisplay();
-  }
+  updateDisplay();
 }
 
 void WindowControllerPlant::updateDisplay() {
