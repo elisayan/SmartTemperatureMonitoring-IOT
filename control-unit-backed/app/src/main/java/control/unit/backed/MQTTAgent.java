@@ -14,7 +14,7 @@ public class MQTTAgent extends AbstractVerticle {
 
     private SystemState currentState = SystemState.NORMAL;
     private long tooHotStartTime = 0;
-    
+
     public enum SystemState {
         NORMAL, HOT, TOO_HOT, ALARM
     }
@@ -33,7 +33,8 @@ public class MQTTAgent extends AbstractVerticle {
                             try {
                                 handleTemperature(payload);
                             } catch (Exception e) {
-                                System.err.println("Error at handle temperature");
+                                System.err.println("Error at handle temperature: " + e.getMessage());
+                                e.printStackTrace(); // <-- aggiungilo per capire l'eccezione
                             }
                         }
                     });
@@ -46,7 +47,7 @@ public class MQTTAgent extends AbstractVerticle {
         }
     }
 
-    public void setController(Controller controller){
+    public void setController(Controller controller) {
         this.controller = controller;
     }
 
@@ -54,11 +55,10 @@ public class MQTTAgent extends AbstractVerticle {
         if (temp > T2 && currentState != SystemState.TOO_HOT) {
             tooHotStartTime = System.currentTimeMillis();
         }
-    
-        return temp < T1 ? SystemState.NORMAL :
-                       temp <= T2 ? SystemState.HOT :
-                       System.currentTimeMillis() - tooHotStartTime > DT ? SystemState.ALARM :
-                       SystemState.TOO_HOT;
+
+        return temp < T1 ? SystemState.NORMAL
+                : temp <= T2 ? SystemState.HOT
+                        : System.currentTimeMillis() - tooHotStartTime > DT ? SystemState.ALARM : SystemState.TOO_HOT;
     }
 
     private int calculateWindowPosition(double temp) {
@@ -72,11 +72,13 @@ public class MQTTAgent extends AbstractVerticle {
     private void handleTemperature(String tempStr) throws InterruptedException {
         try {
             double temp = Double.parseDouble(tempStr);
-            int position = calculateWindowPosition(temp);
             SystemState state = updateSystemState(temp);
-            controller.updateSystem(temp, position, state.name());
+            int pos = calculateWindowPosition(temp);
+
+            controller.updateArduinoData(temp, pos);
+            controller.updateDashboardData(temp, pos, state.name());
         } catch (NumberFormatException e) {
-            System.err.println("Invalid temperature format");
+            System.err.println("Invalid temperature format: '" + tempStr + "'");
         }
     }
 
