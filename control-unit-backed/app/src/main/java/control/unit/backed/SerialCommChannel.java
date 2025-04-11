@@ -95,7 +95,6 @@ public class SerialCommChannel implements CommChannel, SerialPortEventListener {
 					int index = msg2.indexOf("\n");
 					if (index >= 0) {
 						queue.put(msg2.substring(0, index));
-						System.out.println("QUEUE SIZE: " + queue.size());
 						this.controller.receiveMsg(queue.take());
 						currentMsg = new StringBuffer("");
 						if (index + 1 < msg2.length()) {
