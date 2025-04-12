@@ -41,48 +41,90 @@ public class Controller {
 
     public void updateDashboardData(double temp, int position, String state) {
         dataService.addTemperatureData(temp);
-        dataService.updateWindow(position);
         dataService.updateState(state);
+        if (mode.equals("MANUAL")) {
+            dataService.updateWindow(pos);
+        } else if (mode.equals("AUTOMATIC")) {
+            dataService.updateWindow(position);
+        }
     }
 
     public void updateArduinoData(double temp, int position) {
         mode = synchronizeMode();
 
-        if (mode.equals(arduino_mode)) {
-            dataService.updateMode(mode);
-        } else if (mode.equals(dataService.getCurrentMode())) {
-            sendMode(mode);
-        }
-
         if (mode.equals("MANUAL")) {
+            pos = synchronizePosition();
+            dataService.updateWindow(pos);
+            sendPosition(pos);
             sendTemperature(temp);
-            pos = arduino_pos;
             System.out.println("manual system updated-> temp: " + temp + " pos: " + pos);
         } else if (mode.equals("AUTOMATIC")) {
-            sendPosition(position);
-            System.out.println("automatic system updated-> pos: " + position);
+            pos = position;
+            sendPosition(pos);
+            System.out.println("automatic system updated-> pos: " + pos);
         }
+
+        sendTemperature(temp);
+
     }
 
     private String synchronizeMode() {
-        LocalDateTime arduinoTime = arduinoModeLastModified;
         LocalDateTime serviceTime = dataService.getModeLastModifiedTime();
+        String currentMode = dataService.getCurrentMode();
 
-        if (!Objects.equals(arduino_mode, dataService.getCurrentMode())) {
-            if (arduinoTime == null || serviceTime == null) {
-                return mode;
-            }
-    
-            return arduinoTime.isAfter(serviceTime)
-                    ? arduino_mode
-                    : dataService.getCurrentMode();
+        if (Objects.equals(arduino_mode, currentMode)) {
+            return arduino_mode;
         }
-        return mode;
+
+        if (arduinoModeLastModified == null && serviceTime == null) {
+            return mode;
+        }
+        if (arduinoModeLastModified == null) {
+            sendMode(mode);
+            return currentMode;
+        }
+        if (serviceTime == null) {
+            dataService.updateMode(mode);
+            return arduino_mode;
+        }
+
+        if (arduinoModeLastModified.isAfter(serviceTime)) {
+            dataService.updateMode(mode);
+            return arduino_mode;
+        } else {
+            sendMode(mode);
+            return currentMode;
+        }
+    }
+
+    private int synchronizePosition() {
+        LocalDateTime dashboardTime = dataService.getDashboardPosLastModifiedTime();
+        int currentDashboardPos = dataService.getDashboardPosition();
+
+        if (arduino_pos == currentDashboardPos) {
+            return arduino_pos;
+        }
+
+        if (arduinoPosLastModified == null && dashboardTime == null) {
+            return pos;
+        }
+
+        if (arduinoPosLastModified == null) {
+            return currentDashboardPos;
+        }
+
+        if (dashboardTime == null) {
+            return arduino_pos;
+        }
+
+        if (arduinoPosLastModified.isAfter(dashboardTime)) {
+            return arduino_pos;
+        } else {
+            return currentDashboardPos;
+        }
     }
 
     private void sendMode(String mode) {
-        String msg = "arduino -> MODE: "+mode;
-        System.out.println(msg);
         this.serialChannel.sendMsg("MODE:" + mode);
     }
 

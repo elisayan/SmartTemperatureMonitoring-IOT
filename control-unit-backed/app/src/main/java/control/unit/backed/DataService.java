@@ -26,6 +26,7 @@ public class DataService extends AbstractVerticle {
     private int dashboardPosition = 0;
 
     private LocalDateTime dashboardModeLastModified;
+    private LocalDateTime dashboardPosLastModified;
 
     public DataService(int port) throws Exception {
         averageData = new LinkedList<>();
@@ -134,6 +135,10 @@ public class DataService extends AbstractVerticle {
 
     public void updateWindow(int windowPos) {
         dashboardPosition = windowPos;
+        if (dashboardMode.equals("MANUAL")) {
+            dashboardPosLastModified = LocalDateTime.now();
+        }
+        System.out.println("dashboard position: "+dashboardPosition);
     }
 
     public void updateState(String state) {
@@ -142,18 +147,21 @@ public class DataService extends AbstractVerticle {
 
     public void updateMode(String mode) {
         dashboardMode = mode;
-        System.out.println("dashboard -> MODE: "+dashboardMode);
     }
 
     public String getCurrentMode() {
         return dashboardMode;
     }
 
+    public int getDashboardPosition() {
+        return dashboardPosition;
+    }
+
     public LocalDateTime getModeLastModifiedTime(){
         return dashboardModeLastModified;
     }
 
-    public int getDashboardPosition() {
-        return dashboardPosition;
+    public LocalDateTime getDashboardPosLastModifiedTime() {
+        return dashboardPosLastModified;
     }
 }
