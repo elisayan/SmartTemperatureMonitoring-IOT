@@ -87,8 +87,6 @@ void WindowControllerPlant::handleButtonPress() {
 
 void WindowControllerPlant::setCurrentTemperature(float temp) {
   currentTemperature = temp;
-  Serial.print("OK: received temperature ");
-  Serial.println(currentTemperature);
   updateDisplay();
 }
 

@@ -31,8 +31,6 @@ public class Controller {
         } else if (msg.startsWith("POS:")) {
             arduino_pos = Integer.parseInt(msg.split(":")[1].trim());
             arduinoPosLastModified = LocalDateTime.now();
-        } else if (msg.startsWith("OK:")) {
-            System.out.println("SERIAL MSG RECEIVED");
         }
     }
 

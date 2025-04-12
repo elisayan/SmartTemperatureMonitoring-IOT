@@ -34,7 +34,7 @@ public class MQTTAgent extends AbstractVerticle {
                                 handleTemperature(payload);
                             } catch (Exception e) {
                                 System.err.println("Error at handle temperature: " + e.getMessage());
-                                e.printStackTrace(); // <-- aggiungilo per capire l'eccezione
+                                e.printStackTrace();
                             }
                         }
                     });
