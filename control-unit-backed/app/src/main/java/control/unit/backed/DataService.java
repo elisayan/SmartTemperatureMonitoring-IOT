@@ -20,7 +20,6 @@ public class DataService extends AbstractVerticle {
     private int port;
     private List<DataPoint> averageData;
     private List<DataPoint> temperatureData = new LinkedList<>();
-    private String lastManualCommandSource = null;
     private Controller controller;
     private String dashboardMode = "AUTOMATIC";
     private String dashboardState = "NORMAL";
@@ -88,8 +87,7 @@ public class DataService extends AbstractVerticle {
         JsonObject state = new JsonObject()
                 .put("mode", dashboardMode)
                 .put("window", dashboardPosition)
-                .put("state", dashboardState)
-                .put("lastManualCommandSource", lastManualCommandSource);
+                .put("state", dashboardState);
         ctx.response().end(state.encodePrettily());
     }
 
@@ -144,6 +142,7 @@ public class DataService extends AbstractVerticle {
 
     public void updateMode(String mode) {
         dashboardMode = mode;
+        System.out.println("dashboard -> MODE: "+dashboardMode);
     }
 
     public String getCurrentMode() {

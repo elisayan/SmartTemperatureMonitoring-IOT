@@ -22,10 +22,6 @@ void MsgReceiverTask::processLine(const String line) {
     pPlant->setWindowOpening(line.substring(4).toInt());
   } else if (line.startsWith("MODE:")) {
     String mode = line.substring(5);
-    if (mode.equals("MANUAL")) {
-      pPlant->switchToManualMode();
-    } else if (mode.equals("AUTOMATIC")) {
-      pPlant->switchToAutomaticMode();
-    }
+    pPlant->handleButtonPress();
   }
 }

@@ -14,7 +14,7 @@ public class Controller {
 
     private String arduino_mode = null;
     private LocalDateTime arduinoModeLastModified;
-    private String mode = null;
+    private String mode = "AUTOMATIC";
 
     private int arduino_pos = -1;
     private LocalDateTime arduinoPosLastModified;
@@ -48,6 +48,12 @@ public class Controller {
     public void updateArduinoData(double temp, int position) {
         mode = synchronizeMode();
 
+        if (mode.equals(arduino_mode)) {
+            dataService.updateMode(mode);
+        } else if (mode.equals(dataService.getCurrentMode())) {
+            sendMode(mode);
+        }
+
         if (mode.equals("MANUAL")) {
             sendTemperature(temp);
             pos = arduino_pos;
@@ -64,17 +70,19 @@ public class Controller {
 
         if (!Objects.equals(arduino_mode, dataService.getCurrentMode())) {
             if (arduinoTime == null || serviceTime == null) {
-                return arduino_mode;
+                return mode;
             }
     
             return arduinoTime.isAfter(serviceTime)
                     ? arduino_mode
                     : dataService.getCurrentMode();
         }
-        return arduino_mode;
+        return mode;
     }
 
     private void sendMode(String mode) {
+        String msg = "arduino -> MODE: "+mode;
+        System.out.println(msg);
         this.serialChannel.sendMsg("MODE:" + mode);
     }
 
