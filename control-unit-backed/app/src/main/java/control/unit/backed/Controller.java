@@ -1,14 +1,13 @@
 package control.unit.backed;
 
 import java.time.LocalDateTime;
-import java.util.Objects;
 
 public class Controller {
 
     private static final String PORT = "COM3";
     private static final int RATE = 115200;
 
-    private final DataService dataService;
+    private final DataService dashboard;
     private final SerialCommChannel serialChannel;
 
     private String arduino_mode = null;
@@ -21,8 +20,9 @@ public class Controller {
 
     private String source = null;
 
-    public Controller(DataService dataService) throws Exception {
-        this.dataService = dataService;
+    public Controller(DataService dashboard) throws Exception {
+        this.dashboard = dashboard;
+        this.dashboard.setController(this);
         this.serialChannel = new SerialCommChannel(PORT, RATE, this);
     }
 
@@ -30,6 +30,7 @@ public class Controller {
         if (msg.startsWith("MODE:")) {
             arduino_mode = msg.split(":")[1].trim();
             arduinoModeLastModified = LocalDateTime.now();
+            synchronizeAndUpdateMode();
         } else if (msg.startsWith("POS:")) {
             arduino_pos = Integer.parseInt(msg.split(":")[1].trim());
             arduinoPosLastModified = LocalDateTime.now();
@@ -37,24 +38,22 @@ public class Controller {
     }
 
     public void updateDashboardData(double temp, int position, String state) {
-        dataService.addTemperatureData(temp);
-        dataService.updateState(state);
+        dashboard.addTemperatureData(temp);
+        dashboard.updateState(state);
         if (mode.equals("MANUAL")) {
-            dataService.updateWindow(pos);
+            dashboard.updateWindow(pos);
         } else if (mode.equals("AUTOMATIC")) {
-            dataService.updateWindow(position);
+            dashboard.updateWindow(position);
         }
     }
 
     public void updateArduinoData(double temp, int position) {
-        mode = synchronizeMode();
-
         if (mode.equals("MANUAL")) {
             if (source.equals("ARDUINO")) {
                 pos = arduino_pos;
-                dataService.updateWindow(pos);
-            } else if (source.equals("DASHBOARD")){
-                pos = dataService.getDashboardPosition();
+                dashboard.updateWindow(pos);
+            } else if (source.equals("DASHBOARD")) {
+                pos = dashboard.getDashboardPosition();
             }
             sendPosition(pos, temp);
             System.out.println("manual system updated-> temp: " + temp + " pos: " + pos);
@@ -65,40 +64,45 @@ public class Controller {
         }
     }
 
-    private String synchronizeMode() {
-        LocalDateTime serviceTime = dataService.getModeLastModifiedTime();
-        String currentMode = dataService.getCurrentMode();
+    public void synchronizeAndUpdateMode() {
+        this.mode = synchronizeMode();
+    }
 
-        if (arduinoModeLastModified == null && serviceTime == null) {
+    private String synchronizeMode() {
+        LocalDateTime dashboardTime = dashboard.getModeLastModifiedTime();
+        String dashboardMode = dashboard.getCurrentMode();
+
+        if (arduinoModeLastModified == null && dashboardTime == null) {
             return mode;
         }
 
         if (arduinoModeLastModified == null) {
-            sendMode(currentMode);
+            sendMode(dashboardMode);
+
             source = "DASHBOARD";
-            return currentMode;
+            return dashboardMode;
         }
 
-        if (serviceTime == null) {
-            dataService.updateMode(arduino_mode);
+        if (dashboardTime == null) {
+            dashboard.updateMode(arduino_mode);
             source = "ARDUINO";
             return arduino_mode;
         }
 
-        if (arduinoModeLastModified.isAfter(serviceTime)) {
-            dataService.updateMode(arduino_mode);
+        if (arduinoModeLastModified.isAfter(dashboardTime)) {
+            dashboard.updateMode(arduino_mode);
             source = "ARDUINO";
             return arduino_mode;
         } else {
-            sendMode(currentMode);
+            sendMode(dashboardMode);
             source = "DASHBOARD";
-            return currentMode;
+            return dashboardMode;
         }
     }
 
     // private int synchronizePosition() {
-    // LocalDateTime dashboardTime = dataService.getDashboardPosLastModifiedTime();
-    // int currentDashboardPos = dataService.getDashboardPosition();
+    // LocalDateTime dashboardTime = dashboard.getDashboardPosLastModifiedTime();
+    // int currentDashboardPos = dashboard.getDashboardPosition();
 
     // if (arduino_pos == currentDashboardPos) {
     // return arduino_pos;
@@ -125,6 +129,7 @@ public class Controller {
 
     private void sendMode(String mode) {
         this.serialChannel.sendMsg("MODE:" + mode);
+        System.out.println("MODE CHANGED:"+mode);
     }
 
     private void sendPosition(int pos, double temp) {

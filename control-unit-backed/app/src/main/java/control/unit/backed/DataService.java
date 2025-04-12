@@ -17,9 +17,11 @@ public class DataService extends AbstractVerticle {
     private static final int MAX_SIZE = 50;
     private static final int N = 5;
 
+    private Controller controller;
     private int port;
     private List<DataPoint> averageData;
     private List<DataPoint> temperatureData = new LinkedList<>();
+
     private String dashboardMode = "AUTOMATIC";
     private String dashboardState = "NORMAL";
     private int dashboardPosition = 0;
@@ -30,6 +32,10 @@ public class DataService extends AbstractVerticle {
     public DataService(int port) throws Exception {
         averageData = new LinkedList<>();
         this.port = port;
+    }
+
+    public void setController(Controller controller) {
+        this.controller = controller;
     }
 
     @Override
@@ -97,8 +103,9 @@ public class DataService extends AbstractVerticle {
 
         dashboardMode = body.getString("mode");
         dashboardModeLastModified = LocalDateTime.now();
-
         dashboardPosition = dashboardMode.equals("MANUAL") ? body.getInteger("position") : dashboardPosition;
+
+        controller.synchronizeAndUpdateMode();
 
         ctx.response().setStatusMessage("OK").end();
     }
