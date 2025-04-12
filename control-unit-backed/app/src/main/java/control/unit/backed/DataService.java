@@ -20,7 +20,6 @@ public class DataService extends AbstractVerticle {
     private int port;
     private List<DataPoint> averageData;
     private List<DataPoint> temperatureData = new LinkedList<>();
-    private Controller controller;
     private String dashboardMode = "AUTOMATIC";
     private String dashboardState = "NORMAL";
     private int dashboardPosition = 0;
@@ -55,10 +54,6 @@ public class DataService extends AbstractVerticle {
         vertx.createHttpServer().requestHandler(router).listen(port);
     }
 
-    public void setController(Controller controller) {
-        this.controller = controller;
-    }
-
     public void addTemperatureData(double temp) {
         temperatureData.add(new DataPoint(temp, System.currentTimeMillis(), "sensor"));
         updateAverageData();
@@ -79,8 +74,9 @@ public class DataService extends AbstractVerticle {
             temperatureData.clear();
         } else {
             ctx.response()
-                    .setStatusCode(404)
-                    .end("No data available");
+            .setStatusCode(404)
+            .setStatusMessage("No data available")
+            .end();
         }
     }
 
@@ -95,7 +91,7 @@ public class DataService extends AbstractVerticle {
     private void handleModeChange(RoutingContext ctx) {
         JsonObject body = ctx.body().asJsonObject();
         if (body == null) {
-            ctx.response().setStatusCode(400).end("Invalid request body");
+            ctx.response().setStatusCode(400).setStatusMessage("Invalid request body").end();
             return;
         }
 
@@ -103,9 +99,8 @@ public class DataService extends AbstractVerticle {
         dashboardModeLastModified = LocalDateTime.now();
 
         dashboardPosition = dashboardMode.equals("MANUAL") ? body.getInteger("position") : dashboardPosition;
-        dashboardState = body.getString("source", "Dashboard");
 
-        ctx.response().end("OK");
+        ctx.response().setStatusMessage("OK").end();
     }
 
     private double calculateAverage() {
@@ -138,7 +133,6 @@ public class DataService extends AbstractVerticle {
         if (dashboardMode.equals("MANUAL")) {
             dashboardPosLastModified = LocalDateTime.now();
         }
-        System.out.println("dashboard position: "+dashboardPosition);
     }
 
     public void updateState(String state) {
@@ -157,7 +151,7 @@ public class DataService extends AbstractVerticle {
         return dashboardPosition;
     }
 
-    public LocalDateTime getModeLastModifiedTime(){
+    public LocalDateTime getModeLastModifiedTime() {
         return dashboardModeLastModified;
     }
 

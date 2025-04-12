@@ -8,7 +8,6 @@ public class Controller {
     private static final String PORT = "COM3";
     private static final int RATE = 115200;
 
-    private final MQTTAgent mqtt;
     private final DataService dataService;
     private final SerialCommChannel serialChannel;
 
@@ -20,13 +19,9 @@ public class Controller {
     private LocalDateTime arduinoPosLastModified;
     private int pos = -1;
 
-    public Controller(MQTTAgent mqtt, DataService dataService) throws Exception {
-        this.mqtt = mqtt;
+    public Controller(DataService dataService) throws Exception {
         this.dataService = dataService;
-        this.serialChannel = new SerialCommChannel(PORT, RATE, this);
-
-        this.mqtt.setController(this);
-        this.dataService.setController(this);
+        this.serialChannel = new SerialCommChannel(PORT, RATE, this);        
     }
 
     public void receiveMsg(String msg) {
@@ -36,6 +31,8 @@ public class Controller {
         } else if (msg.startsWith("POS:")) {
             arduino_pos = Integer.parseInt(msg.split(":")[1].trim());
             arduinoPosLastModified = LocalDateTime.now();
+        } else if (msg.startsWith("OK:")) {
+            System.out.println("SERIAL MSG RECEIVED");
         }
     }
 
@@ -53,19 +50,15 @@ public class Controller {
         mode = synchronizeMode();
 
         if (mode.equals("MANUAL")) {
-            pos = synchronizePosition();
-            dataService.updateWindow(pos);
-            sendPosition(pos);
-            sendTemperature(temp);
-            System.out.println("manual system updated-> temp: " + temp + " pos: " + pos);
+        pos = synchronizePosition();
+        dataService.updateWindow(pos);
+        sendPosition(pos, temp);
+        System.out.println("manual system updated-> temp: " + temp + " pos: " + pos);
         } else if (mode.equals("AUTOMATIC")) {
-            pos = position;
-            sendPosition(pos);
-            System.out.println("automatic system updated-> pos: " + pos);
+        pos = position;
+        sendPosition(pos, temp);
+        System.out.println("automatic system updated-> pos: " + pos);
         }
-
-        sendTemperature(temp);
-
     }
 
     private String synchronizeMode() {
@@ -128,11 +121,9 @@ public class Controller {
         this.serialChannel.sendMsg("MODE:" + mode);
     }
 
-    private void sendTemperature(double temp) {
-        this.serialChannel.sendMsg("TEMP:" + temp);
-    }
-
-    private void sendPosition(int pos) {
-        this.serialChannel.sendMsg("POS:" + pos);
+    private void sendPosition(int pos, double temp) {
+        this.serialChannel.sendMsg("DATA:");
+        String message = "TEMP:" + temp + " POS:" + pos;
+        this.serialChannel.sendMsg(message);
     }
 }

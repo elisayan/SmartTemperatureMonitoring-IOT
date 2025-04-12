@@ -8,8 +8,9 @@ public class App {
         Vertx vertx = Vertx.vertx();
         DataService dataService = new DataService(8080);
         MQTTAgent mqttAgent = new MQTTAgent();
-        Controller controller = new Controller(mqttAgent, dataService);
+        Controller controller = new Controller(dataService);
 
+        mqttAgent.setController(controller);
         vertx.deployVerticle(dataService);
         vertx.deployVerticle(mqttAgent);
     }
