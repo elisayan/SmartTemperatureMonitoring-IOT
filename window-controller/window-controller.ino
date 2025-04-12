@@ -25,7 +25,7 @@ void setup() {
   Task* btnTask = new ButtonTask(windowPlant);
   Task* potTask = new PotTask(windowPlant);
 
-  msgTask->init(1000);
+  msgTask->init(500);
   btnTask->init(100);
   potTask->init(1000);
 

@@ -8,6 +8,7 @@ MsgReceiverTask::MsgReceiverTask(WindowControllerPlant* pPlant) {
 void MsgReceiverTask::tick() {
   if (MsgService.isMsgAvailable()) {
     Msg* msg = MsgService.receiveMsg();
+
     if (msg) {
       processLine(msg->getContent());
       delete msg;
@@ -16,11 +17,25 @@ void MsgReceiverTask::tick() {
 }
 
 void MsgReceiverTask::processLine(const String line) {
-  if (line.startsWith("TEMP:")) {
-    pPlant->setCurrentTemperature(line.substring(5).toFloat());
-  } else if (line.startsWith("POS:")) {
-    pPlant->setWindowOpening(line.substring(4).toInt());
-  } else if (line.startsWith("MODE:")) {
+  if (line.startsWith("DATA:")) {
+    String data = line.substring(5);
+
+    data.trim();
+
+    int tempStartIndex = data.indexOf("TEMP:") + 5;
+    int tempEndIndex = data.indexOf(" POS:");
+    String tempString = data.substring(tempStartIndex, tempEndIndex);
+    float temp = tempString.toFloat();
+
+    int posStartIndex = data.indexOf("POS:") + 4;
+    String posString = data.substring(posStartIndex);
+    int pos = posString.toInt();
+
+    pPlant->setCurrentTemperature(temp);
+    pPlant->setWindowOpening(pos);
+  }
+
+  if (line.startsWith("MODE:")) {
     String mode = line.substring(5);
     pPlant->handleButtonPress();
   }
