@@ -63,39 +63,27 @@ slider.addEventListener('input', function () {
 
 async function updateWindowPosition(position) {
     try {
-        await fetch('http://localhost:8080/api/mode', {
+        const res = await fetch('http://localhost:8080/api/mode', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ mode: "MANUAL", position: parseInt(position), source: "Dashboard" })
         });
+
+        if(!res.ok){
+            throw new Error(`Response status: ${res.status}`);
+        }
     } catch (error) {
-        console.error('Error updating window position:', error);
+        console.error(error.message);
     }
 }
 
-// async function update() {
-//     try {
-//         const res = await fetch('http://localhost:8080/api/data');
-//         const data = await res.json();
-        
-//         chart.data.labels = data.map(d => new Date(d.time).toLocaleTimeString());
-//         chart.data.datasets[0].data = data.map(d => d.value);
-//         chart.update();
-        
-//         const stateRes = await fetch('http://localhost:8080/api/state');
-//         const state = await stateRes.json();
-//         document.getElementById('mode').textContent = state.mode;
-//         document.getElementById('window').textContent = state.window.toFixed(2);
-//         document.getElementById('state').textContent = state.state;
-//         updateButtonText(state.mode);
-//     } catch (error) {
-//         console.error('Error updating data:', error);
-//     }
-// }
-
-async function update() {
+async function updateData() {
     try {
         const res = await fetch('http://localhost:8080/api/data');
+        if(!res.ok){
+            throw new Error(`Response status: ${res.status}`);
+        }
+
         const data = await res.json();
 
         const currentTime = new Date().toLocaleTimeString();
@@ -109,50 +97,73 @@ async function update() {
         }
 
         chart.update();
+    } catch (error) {
+        console.error(error.message);
+    }
+}
 
+async function updateState() {
+    try {
         const stateRes = await fetch('http://localhost:8080/api/state');
+        if(!stateRes.ok){
+            throw new Error(`Response status: ${stateRes.status}`);
+        }
+
         const state = await stateRes.json();
+
         document.getElementById('mode').textContent = state.mode;
         document.getElementById('window').textContent = state.window.toFixed(2);
         document.getElementById('state').textContent = state.state;
         updateButtonText(state.mode);
     } catch (error) {
-        console.error('Error updating data:', error);
+        console.error(error.message);
     }
 }
 
 async function setManual() {
     const pos = slider.value;
     try {
-        await fetch('http://localhost:8080/api/mode', {
+        const res = await fetch('http://localhost:8080/api/mode', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ mode: "MANUAL", position: parseInt(pos), source: "Dashboard" })
         });
+
+        if(!res.ok){
+            throw new Error(`Response status: ${res.status}`);
+        }
     } catch (error) {
-        console.error('Error setting manual mode:', error);
+        console.error(error.message);
     }
 }
 
 async function setAutomatic() {
     try {
-        await fetch('http://localhost:8080/api/mode', {
+        const res = await fetch('http://localhost:8080/api/mode', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ mode: "AUTOMATIC", position: 0, source: "Dashboard" })
         });
+        if(!res.ok){
+            throw new Error(`Response status: ${res.status}`);
+        }
     } catch (error) {
-        console.error('Error setting automatic mode:', error);
+        console.error(error.message);
     }
 }
 
 async function resolveAlarm() {
     try {
-        await fetch('http://localhost:8080/api/alarm', { method: 'POST' });
+        const res = await fetch('http://localhost:8080/api/alarm', { method: 'POST' });
+        if(!res.ok){
+            throw new Error(`Response status: ${res.status}`);
+        }
     } catch (error) {
-        console.error('Error resolving alarm:', error);
+        console.error(error.message);
     }
 }
 
-setInterval(update, 2000);
-update();
+setInterval(updateData, 1000);
+setInterval(updateState, 1000);
+updateData();
+updateState();
