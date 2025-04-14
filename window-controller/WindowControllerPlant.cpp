@@ -11,7 +11,8 @@ WindowControllerPlant::WindowControllerPlant() {
 void WindowControllerPlant::init() {
   currentOpening = 0;
   currentTemperature = 0.0;
-  manualMode = false;
+  arduinoMode = "AUTOMATIC";
+  manualSource = "ARDUINO";
   pLcd->updateAutoData(currentOpening);
   pMotor->on();
   Serial.print("MODE:");
@@ -44,11 +45,10 @@ int WindowControllerPlant::readPotentiometer() {
 }
 
 void WindowControllerPlant::setWindowFromPotentiometer() {
-  if (manualMode && manualSource == "ARDUINO") {
+  if (arduinoMode == "MANUAL" && manualSource == "ARDUINO") {
     int potValue = readPotentiometer();
     int newPos = map(potValue, 0, 1023, 0, 100);
 
-    Serial.println("Read from potentiometer");
     if (newPos != currentOpening) {
       setWindowOpening(newPos);
       Serial.print("POS:");
@@ -58,7 +58,6 @@ void WindowControllerPlant::setWindowFromPotentiometer() {
 }
 
 void WindowControllerPlant::setWindowOpening(int percentage) {
-  Serial.println(manualSource);
   pMotor->setPosition(percentage);
   currentOpening = percentage;
   updateDisplay();
@@ -76,18 +75,29 @@ void WindowControllerPlant::checkButtonState() {
     handleButtonPress();
     setManualSource("ARDUINO");
 
-
     Serial.print("MODE:");
     Serial.println(isInManualMode() ? "MANUAL" : "AUTOMATIC");
   }
 }
 
 void WindowControllerPlant::handleButtonPress() {
+  String newMode;
+  if (arduinoMode == "MANUAL") {
+    newMode = "AUTOMATIC";
+  } else if (arduinoMode == "AUTOMATIC") {
+    newMode = "MANUAL";
+  }
+
+  handleButtonPress(newMode);
+}
+
+void WindowControllerPlant::handleButtonPress(String mode) {
   state = BUTTON_PRESSED;
-  manualMode = !manualMode;
-  if (manualMode) {
+  arduinoMode = mode;
+
+  if (arduinoMode == "MANUAL") {
     switchToManualMode();
-  } else {
+  } else if (arduinoMode == "AUTOMATIC") {
     switchToAutomaticMode();
   }
   updateDisplay();
@@ -99,9 +109,9 @@ void WindowControllerPlant::setCurrentTemperature(float temp) {
 }
 
 void WindowControllerPlant::updateDisplay() {
-  if (manualMode) {
+  if (arduinoMode == "MANUAL") {
     pLcd->updateManualData(currentOpening, currentTemperature);
-  } else {
+  } else if (arduinoMode == "AUTOMATIC") {
     pLcd->updateAutoData(currentOpening);
   }
 }

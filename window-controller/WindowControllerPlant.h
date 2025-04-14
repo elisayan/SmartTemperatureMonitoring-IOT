@@ -25,6 +25,7 @@ public:
   bool isButtonPressed();
   void checkButtonState();
   void handleButtonPress();
+  void handleButtonPress(String mode);
 
   void setCurrentTemperature(float temp);
   float getCurrentTemperature();
@@ -47,9 +48,9 @@ private:
   Potentiometer* pPot;
   int currentOpening;
   float currentTemperature;
-  bool manualMode;
+  String arduinoMode;
   unsigned long lastUpdateTime;
-  String manualSource = "ARDUINO";
+  String manualSource;
 };
 
 #endif

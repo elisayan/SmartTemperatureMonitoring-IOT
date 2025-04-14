@@ -71,6 +71,8 @@ public class Controller {
     private String synchronizeMode() {
         LocalDateTime dashboardTime = dashboard.getModeLastModifiedTime();
         String dashboardMode = dashboard.getCurrentMode();
+
+        System.out.println("---------- Dashboard mode: "+dashboardMode);
         
         if (arduinoModeLastModified == null && dashboardTime == null) {
             return mode;
@@ -95,6 +97,8 @@ public class Controller {
             return arduino_mode;
         } else {
             sendMode(dashboardMode);
+            System.out.println("....... Dashboard mode: "+dashboardMode);
+
             System.out.println("CHANGE BY AFTER OF ARDUINO");
             source = "DASHBOARD";
             return dashboardMode;
@@ -103,7 +107,6 @@ public class Controller {
 
     private void sendMode(String mode) {
         this.serialChannel.sendMsg("MODE:" + mode);
-        System.out.println("MODE CHANGED:"+mode);
     }
 
     // private void sendPosition(int pos, double temp) {
