@@ -11,11 +11,10 @@ public class Controller {
     private final SerialCommChannel serialChannel;
 
     private String arduino_mode = null;
-    private LocalDateTime arduinoModeLastModified;
+    private LocalDateTime arduinoModeLastModified = null;
     private String mode = "AUTOMATIC";
 
     private int arduino_pos = -1;
-    private LocalDateTime arduinoPosLastModified;
     private int pos = -1;
 
     private String source = null;
@@ -32,7 +31,7 @@ public class Controller {
             synchronizeAndUpdateMode();
         } else if (msg.startsWith("POS:")) {
             arduino_pos = Integer.parseInt(msg.split(":")[1].trim());
-            arduinoPosLastModified = LocalDateTime.now();
+            //arduinoPosLastModified = LocalDateTime.now();
         }
     }
 
@@ -46,20 +45,21 @@ public class Controller {
         }
     }
 
-    public void updateArduinoData(double temp, int position) {
+    public void updateArduinoData(double temp, int position) throws InterruptedException {
         if (mode.equals("MANUAL")) {
             if (source.equals("ARDUINO")) {
                 pos = arduino_pos;
                 dashboard.updateWindow(pos);
             } else if (source.equals("DASHBOARD")) {
                 pos = dashboard.getDashboardPosition();
-                sendDashboardPosition(pos);
+                sendPosition(pos);
             }
-            sendPosition(pos, temp);
+            Thread.sleep(100);
+            sendTemperature(temp);
             System.out.println("manual system updated-> temp: " + temp + " pos: " + pos);
         } else if (mode.equals("AUTOMATIC")) {
             pos = position;
-            sendPosition(pos, temp);
+            sendPosition(pos);
             System.out.println("automatic system updated-> pos: " + pos);
         }
     }
@@ -101,45 +101,22 @@ public class Controller {
         }
     }
 
-    // private int synchronizePosition() {
-    // LocalDateTime dashboardTime = dashboard.getDashboardPosLastModifiedTime();
-    // int currentDashboardPos = dashboard.getDashboardPosition();
-
-    // if (arduino_pos == currentDashboardPos) {
-    // return arduino_pos;
-    // }
-
-    // if (arduinoPosLastModified == null && dashboardTime == null) {
-    // return pos;
-    // }
-
-    // if (arduinoPosLastModified == null) {
-    // return currentDashboardPos;
-    // }
-
-    // if (dashboardTime == null) {
-    // return arduino_pos;
-    // }
-
-    // if (arduinoPosLastModified.isAfter(dashboardTime)) {
-    // return arduino_pos;
-    // } else {
-    // return currentDashboardPos;
-    // }
-    // }
-
     private void sendMode(String mode) {
         this.serialChannel.sendMsg("MODE:" + mode);
         System.out.println("MODE CHANGED:"+mode);
     }
 
-    private void sendPosition(int pos, double temp) {
-        this.serialChannel.sendMsg("DATA:");
-        String message = "TEMP:" + temp + " POS:" + pos;
-        this.serialChannel.sendMsg(message);
+    // private void sendPosition(int pos, double temp) {
+    //     this.serialChannel.sendMsg("DATA:");
+    //     String message = "TEMP:" + temp + " POS:" + pos;
+    //     this.serialChannel.sendMsg(message);
+    // }
+
+    private void sendPosition(int pos) {
+        this.serialChannel.sendMsg("POS:" + pos);
     }
 
-    private void sendDashboardPosition(int pos){
-        this.serialChannel.sendMsg("DASHBOARD POS:"+pos);
+    private void sendTemperature(double temp){
+        this.serialChannel.sendMsg("TEMP:" + temp);
     }
 }

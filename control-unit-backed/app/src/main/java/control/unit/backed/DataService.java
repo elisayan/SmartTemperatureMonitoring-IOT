@@ -26,8 +26,8 @@ public class DataService extends AbstractVerticle {
     private String dashboardState = "NORMAL";
     private int dashboardPosition = 0;
 
-    private LocalDateTime dashboardModeLastModified;
-    private LocalDateTime dashboardPosLastModified;
+    private LocalDateTime dashboardModeLastModified = null;
+    private LocalDateTime dashboardPosLastModified = null;
 
     public DataService(int port) throws Exception {
         averageData = new LinkedList<>();
@@ -80,9 +80,9 @@ public class DataService extends AbstractVerticle {
             temperatureData.clear();
         } else {
             ctx.response()
-            .setStatusCode(404)
-            .setStatusMessage("No data available")
-            .end();
+                    .setStatusCode(404)
+                    .setStatusMessage("No data available")
+                    .end();
         }
     }
 
@@ -137,9 +137,6 @@ public class DataService extends AbstractVerticle {
 
     public void updateWindow(int windowPos) {
         dashboardPosition = windowPos;
-        if (dashboardMode.equals("MANUAL")) {
-            dashboardPosLastModified = LocalDateTime.now();
-        }
     }
 
     public void updateState(String state) {

@@ -48,6 +48,7 @@ void WindowControllerPlant::setWindowFromPotentiometer() {
     int potValue = readPotentiometer();
     int newPos = map(potValue, 0, 1023, 0, 100);
 
+    Serial.println("Read from potentiometer");
     if (newPos != currentOpening) {
       setWindowOpening(newPos);
       Serial.print("POS:");
