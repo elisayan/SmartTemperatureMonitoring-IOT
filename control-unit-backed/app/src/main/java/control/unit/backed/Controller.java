@@ -54,7 +54,7 @@ public class Controller {
                 pos = dashboard.getDashboardPosition();
                 sendPosition(pos);
             }
-            Thread.sleep(100);
+            Thread.sleep(400);
             sendTemperature(temp);
             System.out.println("manual system updated-> temp: " + temp + " pos: " + pos);
         } else if (mode.equals("AUTOMATIC")) {

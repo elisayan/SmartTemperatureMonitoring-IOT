@@ -8,7 +8,6 @@ MsgReceiverTask::MsgReceiverTask(WindowControllerPlant* pPlant) {
 void MsgReceiverTask::tick() {
   if (MsgService.isMsgAvailable()) {
     Msg* msg = MsgService.receiveMsg();
-    pPlant->setManualSource("DASHBOARD");
     if (msg) {
       processLine(msg->getContent());
       delete msg;

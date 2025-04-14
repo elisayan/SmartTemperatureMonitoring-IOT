@@ -103,8 +103,8 @@ public class DataService extends AbstractVerticle {
 
         dashboardMode = body.getString("mode");
         dashboardModeLastModified = LocalDateTime.now();
+        
         dashboardPosition = dashboardMode.equals("MANUAL") ? body.getInteger("position") : dashboardPosition;
-
         controller.synchronizeAndUpdateMode();
 
         ctx.response().setStatusMessage("OK").end();
