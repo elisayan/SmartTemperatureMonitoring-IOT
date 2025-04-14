@@ -16,6 +16,7 @@ public:
   void switchToManualMode();
   bool isInAutomaticMode();
   bool isInManualMode();
+  void setManualSource(String source);
 
   void setWindowOpening(int percentage);
   int readPotentiometer();
@@ -48,6 +49,7 @@ private:
   float currentTemperature;
   bool manualMode;
   unsigned long lastUpdateTime;
+  String manualSource = "ARDUINO";
 };
 
 #endif

@@ -35,12 +35,16 @@ bool WindowControllerPlant::isInManualMode() {
   return state == MANUAL_MODE;
 }
 
+void WindowControllerPlant::setManualSource(String source) {
+  manualSource = source;
+}
+
 int WindowControllerPlant::readPotentiometer() {
   return pPot->getValue();
 }
 
 void WindowControllerPlant::setWindowFromPotentiometer() {
-  if (manualMode) {
+  if (manualMode && manualSource == "ARDUINO") {
     int potValue = readPotentiometer();
     int newPos = map(potValue, 0, 1023, 0, 100);
 
@@ -53,6 +57,7 @@ void WindowControllerPlant::setWindowFromPotentiometer() {
 }
 
 void WindowControllerPlant::setWindowOpening(int percentage) {
+  Serial.println(manualSource);
   pMotor->setPosition(percentage);
   currentOpening = percentage;
   updateDisplay();
@@ -68,6 +73,8 @@ void WindowControllerPlant::checkButtonState() {
 
   if (pButton->isClicked()) {
     handleButtonPress();
+    setManualSource("ARDUINO");
+
 
     Serial.print("MODE:");
     Serial.println(isInManualMode() ? "MANUAL" : "AUTOMATIC");

@@ -11,6 +11,7 @@ public class App {
         Controller controller = new Controller(dataService);
 
         mqttAgent.setController(controller);
+        dataService.setController(controller);
         vertx.deployVerticle(dataService);
         vertx.deployVerticle(mqttAgent);
     }

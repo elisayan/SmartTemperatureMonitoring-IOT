@@ -8,7 +8,7 @@ MsgReceiverTask::MsgReceiverTask(WindowControllerPlant* pPlant) {
 void MsgReceiverTask::tick() {
   if (MsgService.isMsgAvailable()) {
     Msg* msg = MsgService.receiveMsg();
-
+    pPlant->setManualSource("DASHBOARD");
     if (msg) {
       processLine(msg->getContent());
       delete msg;
@@ -17,6 +17,14 @@ void MsgReceiverTask::tick() {
 }
 
 void MsgReceiverTask::processLine(const String line) {
+  if (line.startsWith("MODE:")) {
+    String mode = line.substring(5);
+    pPlant->handleButtonPress();
+    // if(mode == "MANUAL"){
+    //   pPlant->setManualSource("DASHBOARD");
+    // }
+  }
+
   if (line.startsWith("DATA:")) {
     String data = line.substring(5);
 
@@ -33,10 +41,5 @@ void MsgReceiverTask::processLine(const String line) {
 
     pPlant->setCurrentTemperature(temp);
     pPlant->setWindowOpening(pos);
-  }
-
-  if (line.startsWith("MODE:")) {
-    String mode = line.substring(5);
-    pPlant->handleButtonPress();
   }
 }

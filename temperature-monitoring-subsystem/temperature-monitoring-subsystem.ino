@@ -30,6 +30,7 @@ void loop() {
   
   if(now - lastSampleTime >= SAMPLING_INTERVAL) {
     float temp = tempSensor.getTemperature();
+    Serial.println(temp);
     sendMQTT(temp);
     lastSampleTime = now;
   }

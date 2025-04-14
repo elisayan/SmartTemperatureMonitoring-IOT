@@ -22,7 +22,6 @@ public class Controller {
 
     public Controller(DataService dashboard) throws Exception {
         this.dashboard = dashboard;
-        this.dashboard.setController(this);
         this.serialChannel = new SerialCommChannel(PORT, RATE, this);
     }
 
@@ -54,6 +53,7 @@ public class Controller {
                 dashboard.updateWindow(pos);
             } else if (source.equals("DASHBOARD")) {
                 pos = dashboard.getDashboardPosition();
+                sendDashboardPosition(pos);
             }
             sendPosition(pos, temp);
             System.out.println("manual system updated-> temp: " + temp + " pos: " + pos);
@@ -71,14 +71,14 @@ public class Controller {
     private String synchronizeMode() {
         LocalDateTime dashboardTime = dashboard.getModeLastModifiedTime();
         String dashboardMode = dashboard.getCurrentMode();
-
+        
         if (arduinoModeLastModified == null && dashboardTime == null) {
             return mode;
         }
 
         if (arduinoModeLastModified == null) {
             sendMode(dashboardMode);
-
+            System.out.println("CHANGE BY NULL OF ARDUINO");
             source = "DASHBOARD";
             return dashboardMode;
         }
@@ -95,6 +95,7 @@ public class Controller {
             return arduino_mode;
         } else {
             sendMode(dashboardMode);
+            System.out.println("CHANGE BY AFTER OF ARDUINO");
             source = "DASHBOARD";
             return dashboardMode;
         }
@@ -136,5 +137,9 @@ public class Controller {
         this.serialChannel.sendMsg("DATA:");
         String message = "TEMP:" + temp + " POS:" + pos;
         this.serialChannel.sendMsg(message);
+    }
+
+    private void sendDashboardPosition(int pos){
+        this.serialChannel.sendMsg("DASHBOARD POS:"+pos);
     }
 }

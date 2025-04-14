@@ -79,8 +79,37 @@ public class MQTTAgent extends AbstractVerticle {
             controller.updateDashboardData(temp, pos, state.name());
         } catch (NumberFormatException e) {
             System.err.println("Invalid temperature format: '" + tempStr + "'");
+            System.err.println(e);
         }
     }
+
+    // private void handleTemperature(String tempStr) throws InterruptedException {
+    // try {
+    // // Log per vedere cosa stiamo ricevendo
+    // System.out.println("Received payload: " + tempStr);
+
+    // // Convertiamo la stringa JSON in un oggetto JsonObject
+    // JsonObject json = new JsonObject(tempStr);
+
+    // // Verifica che il JSON contenga un campo "temperature"
+    // if (json.containsKey("temperature")) {
+    // // Estraiamo la temperatura dal JSON
+    // double temp = json.getDouble("temperature");
+
+    // // Gestiamo la temperatura come prima
+    // SystemState state = updateSystemState(temp);
+    // int pos = calculateWindowPosition(temp);
+
+    // controller.updateArduinoData(temp, pos);
+    // controller.updateDashboardData(temp, pos, state.name());
+    // } else {
+    // System.err.println("Missing 'temperature' field in the payload: " + tempStr);
+    // }
+    // } catch (Exception e) {
+    // System.err.println("Error processing temperature data: " + e.getMessage());
+    // e.printStackTrace();
+    // }
+    // }
 
     @Override
     public void stop() {
