@@ -32,22 +32,4 @@ void MsgReceiverTask::processLine(const String line) {
     pPlant->setManualSource("DASHBOARD");
     pPlant->setWindowOpening(pos);
   }
-
-  // if (line.startsWith("DATA:")) {
-  //   String data = line.substring(5);
-
-  //   data.trim();
-
-  //   int tempStartIndex = data.indexOf("TEMP:") + 5;
-  //   int tempEndIndex = data.indexOf(" POS:");
-  //   String tempString = data.substring(tempStartIndex, tempEndIndex);
-  //   float temp = tempString.toFloat();
-
-  //   int posStartIndex = data.indexOf("POS:") + 4;
-  //   String posString = data.substring(posStartIndex);
-  //   int pos = posString.toInt();
-
-  //   pPlant->setCurrentTemperature(temp);
-  //   pPlant->setWindowOpening(pos);
-  // }
 }

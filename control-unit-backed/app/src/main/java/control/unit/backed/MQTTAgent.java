@@ -94,8 +94,8 @@ public class MQTTAgent extends AbstractVerticle {
         if (temp < T1)
             return 0;
         if (temp > T2)
-            return 90;
-        return (int) (((temp - T1) / (T2 - T1)) * 90);
+            return 100;
+        return (int) (((temp - T1) / (T2 - T1)) * 100);
     }
 
     private void handleTemperature(String tempStr) throws InterruptedException {
