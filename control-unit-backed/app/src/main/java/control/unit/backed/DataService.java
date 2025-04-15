@@ -116,8 +116,13 @@ public class DataService extends AbstractVerticle {
     }
 
     private void handleAlarmResolution(RoutingContext ctx) {
-        dashboardState = "NORMAL";
-        ctx.response().setStatusMessage("OK").end();
+        controller.resolveAlarm();
+        JsonObject response = new JsonObject()
+            .put("status", "success")
+            .put("message", "Alarm resolved successfully");
+        ctx.response()
+            .putHeader("content-type", "application/json")
+            .end(response.encodePrettily());
     }
 
     private double calculateAverage() {

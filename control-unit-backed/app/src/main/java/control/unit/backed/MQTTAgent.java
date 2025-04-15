@@ -56,6 +56,10 @@ public class MQTTAgent extends AbstractVerticle {
         this.tooHotStartTime = 0;
     }
 
+    public SystemState getCurrentState() {
+        return currentState;
+    }
+
     private SystemState updateSystemState(double temp) {
         long now = System.currentTimeMillis();
     

@@ -27,6 +27,13 @@ body {
     cursor: not-allowed;
 }
 
+.alert {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    z-index: 1000;
+    min-width: 300px;
+}
 
 #status {
     background-color: #f8f9fa;

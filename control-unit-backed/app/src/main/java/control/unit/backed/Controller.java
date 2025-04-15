@@ -70,8 +70,11 @@ public class Controller {
     }
 
     public void resolveAlarm() {
-        mqttAgent.resetAlarmState();
-        dashboard.updateState("NORMAL");
+        if(mqttAgent.getCurrentState() == MQTTAgent.SystemState.ALARM) {
+            mqttAgent.resetAlarmState();
+            dashboard.updateState("NORMAL");
+            System.out.println("Alarm manually resolved");
+        }
     }
 
     private String synchronizeMode() {
@@ -108,7 +111,7 @@ public class Controller {
     private void sendMode(String mode) {
         this.serialChannel.sendMsg("MODE:" + mode);
     }
-    
+
     private void sendPosition(int pos) {
         this.serialChannel.sendMsg("POS:" + pos);
     }

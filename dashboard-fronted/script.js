@@ -4,7 +4,7 @@ const chart = new Chart(ctx, {
     data: {
         labels: [],
         datasets: [{
-            label: 'Temperature (°C)',
+            label: 'Temperature average(°C)',
             data: [],
             borderColor: 'rgb(75, 192, 192)',
             fill: false,
@@ -161,16 +161,39 @@ async function setAutomatic() {
 
 async function resolveAlarm() {
     try {
-        const res = await fetch('http://localhost:8080/api/alarm', { method: 'POST' });
-        if(!res.ok){
-            throw new Error(`Response status: ${res.status}`);
+        const res = await fetch('http://localhost:8080/api/alarm', { 
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' }
+        });
+        
+        const result = await res.json();
+        if(result.status === 'success') {
+            showTempAlert(result.message, 'success');
         }
     } catch (error) {
+        showTempAlert('Failed to resolve alarm', 'danger');
         console.error(error.message);
     }
 }
 
-setInterval(updateData, 1000);
+function showTempAlert(message, type) {
+    const alertDiv = document.createElement('div');
+    alertDiv.className = `alert alert-${type} alert-dismissible fade show`;
+    alertDiv.role = 'alert';
+    alertDiv.innerHTML = `
+        ${message}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    `;
+    
+    const container = document.querySelector('.container-fluid');
+    container.prepend(alertDiv);
+    
+    setTimeout(() => {
+        alertDiv.remove();
+    }, 3000);
+}
+
+setInterval(updateData, 2000);
 setInterval(updateState, 1000);
 updateData();
 updateState();
