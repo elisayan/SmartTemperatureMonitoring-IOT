@@ -20,6 +20,14 @@ body {
     background-color: #0056b3;
 }
 
+.btn-primary:disabled {
+    background-color: #6c757d;
+    border: none;
+    opacity: 0.65;
+    cursor: not-allowed;
+}
+
+
 #status {
     background-color: #f8f9fa;
     padding: 15px;

@@ -28,7 +28,7 @@
             <div class="col-md-4">
                 <div class="card shadow-sm">
                     <div class="card-body">
-                        <h2 class="card-title">Controls</h2>
+                        <h2 class="card-title">Control panel</h2>
                         <div class="mb-3">
                             <label for="slider" class="form-label">Window Position:</label>
                             <input type="range" class="form-range" id="slider" min="0" max="100" value="0"  >

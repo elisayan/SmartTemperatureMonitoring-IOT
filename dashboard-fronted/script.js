@@ -115,6 +115,13 @@ async function updateState() {
         document.getElementById('window').textContent = state.window.toFixed(2);
         document.getElementById('state').textContent = state.state;
         updateButtonText(state.mode);
+
+        const alarmButton = document.querySelector('#status button');
+        if (state.state === "ALARM") {
+            alarmButton.disabled = false;
+        } else {
+            alarmButton.disabled = true;
+        }
     } catch (error) {
         console.error(error.message);
     }

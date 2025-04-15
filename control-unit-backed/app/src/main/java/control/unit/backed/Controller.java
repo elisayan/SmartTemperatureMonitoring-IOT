@@ -31,7 +31,6 @@ public class Controller {
             synchronizeAndUpdateMode();
         } else if (msg.startsWith("POS:")) {
             arduino_pos = Integer.parseInt(msg.split(":")[1].trim());
-            //arduinoPosLastModified = LocalDateTime.now();
         }
     }
 
@@ -71,8 +70,6 @@ public class Controller {
     private String synchronizeMode() {
         LocalDateTime dashboardTime = dashboard.getModeLastModifiedTime();
         String dashboardMode = dashboard.getCurrentMode();
-
-        System.out.println("---------- Dashboard mode: "+dashboardMode);
         
         if (arduinoModeLastModified == null && dashboardTime == null) {
             return mode;
@@ -80,7 +77,6 @@ public class Controller {
 
         if (arduinoModeLastModified == null) {
             sendMode(dashboardMode);
-            System.out.println("CHANGE BY NULL OF ARDUINO");
             source = "DASHBOARD";
             return dashboardMode;
         }
@@ -97,9 +93,6 @@ public class Controller {
             return arduino_mode;
         } else {
             sendMode(dashboardMode);
-            System.out.println("....... Dashboard mode: "+dashboardMode);
-
-            System.out.println("CHANGE BY AFTER OF ARDUINO");
             source = "DASHBOARD";
             return dashboardMode;
         }

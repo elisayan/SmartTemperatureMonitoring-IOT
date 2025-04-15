@@ -6,7 +6,7 @@ import io.vertx.mqtt.MqttClient;
 public class MQTTAgent extends AbstractVerticle {
     private static final String BROKER_ADDRESS = "test.mosquitto.org";// "broker.mqtt-dashboard.com";
     private static final String TEMPERATURE_TOPIC = "temperature/data";
-    private static final double T1 = 10.0, T2 = 25.0;
+    private static final double T1 = 10.0, T2 = 15.0;
     private static final long DT = 5000;
 
     private MqttClient client;
@@ -51,16 +51,46 @@ public class MQTTAgent extends AbstractVerticle {
         this.controller = controller;
     }
 
+    // private SystemState updateSystemState(double temp) {
+    //     if (temp > T2 && currentState != SystemState.TOO_HOT) {
+    //         tooHotStartTime = System.currentTimeMillis();
+    //     }
+
+    //     return temp < T1 ? SystemState.NORMAL
+    //             : temp <= T2 ? SystemState.HOT
+    //                     : System.currentTimeMillis() - tooHotStartTime > DT ? SystemState.ALARM : SystemState.TOO_HOT;
+    // }
+
     private SystemState updateSystemState(double temp) {
-        if (temp > T2 && currentState != SystemState.TOO_HOT) {
-            tooHotStartTime = System.currentTimeMillis();
+        long now = System.currentTimeMillis();
+    
+        switch (currentState) {
+            case NORMAL:
+            case HOT:
+                if (temp > T2) {
+                    tooHotStartTime = now;
+                    return SystemState.TOO_HOT;
+                } else if (temp >= T1) {
+                    return SystemState.HOT;
+                } else {
+                    return SystemState.NORMAL;
+                }
+    
+            case TOO_HOT:
+                if (temp <= T2) {
+                    return temp >= T1 ? SystemState.HOT : SystemState.NORMAL;
+                } else if (now - tooHotStartTime > DT) {
+                    return SystemState.ALARM;
+                }
+                return SystemState.TOO_HOT;
+    
+            case ALARM:
+                return SystemState.ALARM;
         }
-
-        return temp < T1 ? SystemState.NORMAL
-                : temp <= T2 ? SystemState.HOT
-                        : System.currentTimeMillis() - tooHotStartTime > DT ? SystemState.ALARM : SystemState.TOO_HOT;
+    
+        return currentState;
     }
-
+    
     private int calculateWindowPosition(double temp) {
         if (temp < T1)
             return 0;
@@ -72,44 +102,16 @@ public class MQTTAgent extends AbstractVerticle {
     private void handleTemperature(String tempStr) throws InterruptedException {
         try {
             double temp = Double.parseDouble(tempStr);
-            SystemState state = updateSystemState(temp);
+            currentState = updateSystemState(temp);
             int pos = calculateWindowPosition(temp);
 
             controller.updateArduinoData(temp, pos);
-            controller.updateDashboardData(temp, pos, state.name());
+            controller.updateDashboardData(temp, pos, currentState.name());
         } catch (NumberFormatException e) {
             System.err.println("Invalid temperature format: '" + tempStr + "'");
             System.err.println(e);
         }
     }
-
-    // private void handleTemperature(String tempStr) throws InterruptedException {
-    // try {
-    // // Log per vedere cosa stiamo ricevendo
-    // System.out.println("Received payload: " + tempStr);
-
-    // // Convertiamo la stringa JSON in un oggetto JsonObject
-    // JsonObject json = new JsonObject(tempStr);
-
-    // // Verifica che il JSON contenga un campo "temperature"
-    // if (json.containsKey("temperature")) {
-    // // Estraiamo la temperatura dal JSON
-    // double temp = json.getDouble("temperature");
-
-    // // Gestiamo la temperatura come prima
-    // SystemState state = updateSystemState(temp);
-    // int pos = calculateWindowPosition(temp);
-
-    // controller.updateArduinoData(temp, pos);
-    // controller.updateDashboardData(temp, pos, state.name());
-    // } else {
-    // System.err.println("Missing 'temperature' field in the payload: " + tempStr);
-    // }
-    // } catch (Exception e) {
-    // System.err.println("Error processing temperature data: " + e.getMessage());
-    // e.printStackTrace();
-    // }
-    // }
 
     @Override
     public void stop() {
