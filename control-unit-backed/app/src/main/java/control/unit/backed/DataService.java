@@ -57,6 +57,8 @@ public class DataService extends AbstractVerticle {
 
         router.post("/api/mode").handler(this::handleModeChange);
 
+        router.post("/api/alarm").handler(this::handleAlarmResolution);
+
         vertx.createHttpServer().requestHandler(router).listen(port);
     }
 
@@ -94,22 +96,6 @@ public class DataService extends AbstractVerticle {
         ctx.response().end(state.encodePrettily());
     }
 
-    // private void handleModeChange(RoutingContext ctx) {
-    //     JsonObject body = ctx.body().asJsonObject();
-    //     if (body == null) {
-    //         ctx.response().setStatusCode(400).setStatusMessage("Invalid request body").end();
-    //         return;
-    //     }
-
-    //     dashboardMode = body.getString("mode");
-    //     dashboardModeLastModified = LocalDateTime.now();
-        
-    //     dashboardPosition = dashboardMode.equals("MANUAL") ? body.getInteger("position") : dashboardPosition;
-    //     controller.synchronizeAndUpdateMode();
-
-    //     ctx.response().setStatusMessage("OK").end();
-    // }
-
     private void handleModeChange(RoutingContext ctx) {
         JsonObject body = ctx.body().asJsonObject();
         if (body == null) {
@@ -124,13 +110,15 @@ public class DataService extends AbstractVerticle {
             dashboardModeLastModified = LocalDateTime.now();    
             controller.synchronizeAndUpdateMode();
         }
-
         dashboardPosition = dashboardMode.equals("MANUAL") ? body.getInteger("position") : dashboardPosition;
-
     
         ctx.response().setStatusMessage("OK").end();
     }
-    
+
+    private void handleAlarmResolution(RoutingContext ctx) {
+        dashboardState = "NORMAL";
+        ctx.response().setStatusMessage("OK").end();
+    }
 
     private double calculateAverage() {
         if (temperatureData.isEmpty()) {

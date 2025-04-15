@@ -8,6 +8,7 @@ public class Controller {
     private static final int RATE = 115200;
 
     private final DataService dashboard;
+    private final MQTTAgent mqttAgent;
     private final SerialCommChannel serialChannel;
 
     private String arduino_mode = null;
@@ -19,8 +20,9 @@ public class Controller {
 
     private String source = null;
 
-    public Controller(DataService dashboard) throws Exception {
+    public Controller(DataService dashboard, MQTTAgent mqttAgent) throws Exception {
         this.dashboard = dashboard;
+        this.mqttAgent = mqttAgent;
         this.serialChannel = new SerialCommChannel(PORT, RATE, this);
     }
 
@@ -67,10 +69,15 @@ public class Controller {
         this.mode = synchronizeMode();
     }
 
+    public void resolveAlarm() {
+        mqttAgent.resetAlarmState();
+        dashboard.updateState("NORMAL");
+    }
+
     private String synchronizeMode() {
         LocalDateTime dashboardTime = dashboard.getModeLastModifiedTime();
         String dashboardMode = dashboard.getCurrentMode();
-        
+
         if (arduinoModeLastModified == null && dashboardTime == null) {
             return mode;
         }
@@ -101,18 +108,12 @@ public class Controller {
     private void sendMode(String mode) {
         this.serialChannel.sendMsg("MODE:" + mode);
     }
-
-    // private void sendPosition(int pos, double temp) {
-    //     this.serialChannel.sendMsg("DATA:");
-    //     String message = "TEMP:" + temp + " POS:" + pos;
-    //     this.serialChannel.sendMsg(message);
-    // }
-
+    
     private void sendPosition(int pos) {
         this.serialChannel.sendMsg("POS:" + pos);
     }
 
-    private void sendTemperature(double temp){
+    private void sendTemperature(double temp) {
         this.serialChannel.sendMsg("TEMP:" + temp);
     }
 }
