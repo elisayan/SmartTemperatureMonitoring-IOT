@@ -94,21 +94,43 @@ public class DataService extends AbstractVerticle {
         ctx.response().end(state.encodePrettily());
     }
 
+    // private void handleModeChange(RoutingContext ctx) {
+    //     JsonObject body = ctx.body().asJsonObject();
+    //     if (body == null) {
+    //         ctx.response().setStatusCode(400).setStatusMessage("Invalid request body").end();
+    //         return;
+    //     }
+
+    //     dashboardMode = body.getString("mode");
+    //     dashboardModeLastModified = LocalDateTime.now();
+        
+    //     dashboardPosition = dashboardMode.equals("MANUAL") ? body.getInteger("position") : dashboardPosition;
+    //     controller.synchronizeAndUpdateMode();
+
+    //     ctx.response().setStatusMessage("OK").end();
+    // }
+
     private void handleModeChange(RoutingContext ctx) {
         JsonObject body = ctx.body().asJsonObject();
         if (body == null) {
             ctx.response().setStatusCode(400).setStatusMessage("Invalid request body").end();
             return;
         }
+    
+        String newMode = body.getString("mode");
+    
+        if (!newMode.equals(dashboardMode)) {
+            dashboardMode = newMode;
+            dashboardModeLastModified = LocalDateTime.now();    
+            controller.synchronizeAndUpdateMode();
+        }
 
-        dashboardMode = body.getString("mode");
-        dashboardModeLastModified = LocalDateTime.now();
-        
         dashboardPosition = dashboardMode.equals("MANUAL") ? body.getInteger("position") : dashboardPosition;
-        controller.synchronizeAndUpdateMode();
 
+    
         ctx.response().setStatusMessage("OK").end();
     }
+    
 
     private double calculateAverage() {
         if (temperatureData.isEmpty()) {
