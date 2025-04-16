@@ -6,6 +6,7 @@
 class LCDDisplayI2C {
 public:
   LCDDisplayI2C();
+  void welcome();
   void updateAutoData(int windowPosition);
   void updateManualData(int windowPosition, float currentTemperature);
 

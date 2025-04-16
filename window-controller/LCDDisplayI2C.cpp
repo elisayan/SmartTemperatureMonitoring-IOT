@@ -7,6 +7,32 @@ LCDDisplayI2C::LCDDisplayI2C()
   lcd.backlight();
 }
 
+void LCDDisplayI2C::welcome() {
+  lcd.clear();
+  
+  lcd.setCursor(1, 0);
+  lcd.print("  * WELCOME TO *");
+  lcd.setCursor(1, 1);
+  lcd.print("** SMART WINDOW **");
+  lcd.setCursor(2, 2);
+  lcd.print("** CONTROLLER **");
+  delay(4000);
+
+  lcd.clear();
+  lcd.setCursor(0, 0);
+  lcd.print("Initializing");
+  for(int i = 0; i < 5; i++) {
+    lcd.print(".");
+    delay(1000);
+  }
+
+  lcd.clear();
+  lcd.setCursor(3, 1);
+  lcd.print(" System Ready ");
+  delay(3000);
+  lcd.clear();
+}
+
 void LCDDisplayI2C::updateAutoData(int windowPosition) {
   lcd.clear();
 

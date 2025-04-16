@@ -13,6 +13,7 @@ void WindowControllerPlant::init() {
   currentTemperature = 0.0;
   arduinoMode = "AUTOMATIC";
   manualSource = "ARDUINO";
+  pLcd->welcome();
   pLcd->updateAutoData(currentOpening);
   pMotor->on();
   Serial.print("MODE:");
