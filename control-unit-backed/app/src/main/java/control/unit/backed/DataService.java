@@ -12,6 +12,7 @@ import io.vertx.ext.web.handler.BodyHandler;
 import java.time.LocalDateTime;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 public class DataService extends AbstractVerticle {
     private static final int MAX_SIZE = 50;
@@ -19,8 +20,10 @@ public class DataService extends AbstractVerticle {
 
     private Controller controller;
     private int port;
-    private List<DataPoint> averageData;
     private List<DataPoint> temperatureData = new LinkedList<>();
+
+    private double maxTemperature = Double.MIN_VALUE;
+    private double minTemperature = Double.MAX_VALUE;
 
     private String dashboardMode = "AUTOMATIC";
     private String dashboardState = "NORMAL";
@@ -30,7 +33,6 @@ public class DataService extends AbstractVerticle {
     private LocalDateTime dashboardPosLastModified = null;
 
     public DataService(int port) throws Exception {
-        averageData = new LinkedList<>();
         this.port = port;
     }
 
@@ -64,28 +66,40 @@ public class DataService extends AbstractVerticle {
 
     public void addTemperatureData(double temp) {
         temperatureData.add(new DataPoint(temp, System.currentTimeMillis(), "sensor"));
-        updateAverageData();
+
+        if (temp > maxTemperature) maxTemperature = temp;
+        if (temp < minTemperature) minTemperature = temp;
+        
+        if (temperatureData.size() > MAX_SIZE) {
+            temperatureData.remove(0);
+        }
+        //updateAverageData();
     }
 
     private void handleGetTemperatureData(RoutingContext ctx) {
-        if (temperatureData.size() == N) {
-            double lastAverage = averageData.getLast().getValue();
-
-            JsonObject response = new JsonObject()
-                    .put("averageTemperature", lastAverage)
-                    .put("numberOfDataPoints", temperatureData.size());
-
-            ctx.response()
-                    .putHeader("content-type", "application/json")
-                    .end(response.encodePrettily());
-
-            temperatureData.clear();
-        } else {
+        if (temperatureData.isEmpty()) {
             ctx.response()
                     .setStatusCode(404)
                     .setStatusMessage("No data available")
                     .end();
+            return;
         }
+    
+        JsonObject response = new JsonObject()
+                .put("averageTemperature", calculateAverage())
+                .put("currentTemperature", getCurrentTemperature()) // Usa il metodo invece della variabile
+                .put("maxTemperature", maxTemperature)
+                .put("minTemperature", minTemperature)
+                .put("temperatures", getLastNTemperatures(N))
+                .put("numberOfDataPoints", temperatureData.size());
+    
+        ctx.response()
+                .putHeader("content-type", "application/json")
+                .end(response.encodePrettily());
+    }
+
+    private double getCurrentTemperature() {
+        return temperatureData.getLast().getValue();
     }
 
     private void handleGetCurrentState(RoutingContext ctx) {
@@ -125,29 +139,20 @@ public class DataService extends AbstractVerticle {
             .end(response.encodePrettily());
     }
 
-    private double calculateAverage() {
-        if (temperatureData.isEmpty()) {
-            return 0.0;
-        }
-
-        double sum = 0.0;
-        for (DataPoint data : temperatureData) {
-            sum += data.getValue();
-        }
-
-        return sum / temperatureData.size();
+    private List<Double> getLastNTemperatures(int n) {
+        return temperatureData.stream()
+                .skip(Math.max(0, temperatureData.size() - n))
+                .map(DataPoint::getValue)
+                .collect(Collectors.toList());
     }
 
-    private void updateAverageData() {
-        if (temperatureData.size() == N) {
-            double average = calculateAverage();
-
-            averageData.add(new DataPoint(average, System.currentTimeMillis(), "average"));
-
-            if (averageData.size() > MAX_SIZE) {
-                averageData.removeFirst();
-            }
-        }
+    private double calculateAverage() {
+        if (temperatureData.isEmpty()) return 0.0;
+        
+        return getLastNTemperatures(N).stream()
+                .mapToDouble(Double::doubleValue)
+                .average()
+                .orElse(0.0);
     }
 
     public void updateWindow(int windowPos) {

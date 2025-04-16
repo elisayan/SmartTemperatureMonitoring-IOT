@@ -3,14 +3,16 @@ const chart = new Chart(ctx, {
     type: 'line',
     data: {
         labels: [],
-        datasets: [{
-            label: 'Temperature average(°C)',
-            data: [],
-            borderColor: 'rgb(75, 192, 192)',
-            fill: false,
-            pointRadius: 5,
-            pointBackgroundColor: 'rgb(75, 192, 192)'
-        }]
+        datasets: [
+            {
+                label: 'Current Temperature (°C)',
+                data: [],
+                borderColor: 'rgb(75, 192, 192)',
+                fill: false,
+                pointRadius: 5,
+                pointBackgroundColor: 'rgb(75, 192, 192)'
+            }
+        ]
     },
     options: {
         responsive: true,
@@ -69,7 +71,7 @@ async function updateWindowPosition(position) {
             body: JSON.stringify({ mode: "MANUAL", position: parseInt(position), source: "Dashboard" })
         });
 
-        if(!res.ok){
+        if (!res.ok) {
             throw new Error(`Response status: ${res.status}`);
         }
     } catch (error) {
@@ -80,23 +82,19 @@ async function updateWindowPosition(position) {
 async function updateData() {
     try {
         const res = await fetch('http://localhost:8080/api/data');
-        if(!res.ok){
-            throw new Error(`Response status: ${res.status}`);
-        }
+        if (!res.ok) throw new Error(`Response status: ${res.status}`);
 
         const data = await res.json();
 
-        const currentTime = new Date().toLocaleTimeString();
-        chart.data.labels.push(currentTime);
-        chart.data.datasets[0].data.push(data.averageTemperature);
-
-        const maxDataPoints = 10;
-        if (chart.data.labels.length > maxDataPoints) {
-            chart.data.labels.shift();
-            chart.data.datasets[0].data.shift();
-        }
-
+        chart.data.labels = Array.from({length: data.temperatures.length}, (_, i) => `M${i+1}`);
+        chart.data.datasets[0].data = data.temperatures;
+        
         chart.update();
+        
+        document.getElementById('avgTemp').textContent = data.averageTemperature.toFixed(2) + '°C';
+        document.getElementById('maxTemp').textContent = data.maxTemperature.toFixed(2) + '°C';
+        document.getElementById('minTemp').textContent = data.minTemperature.toFixed(2) + '°C';
+        
     } catch (error) {
         console.error(error.message);
     }
@@ -105,7 +103,7 @@ async function updateData() {
 async function updateState() {
     try {
         const stateRes = await fetch('http://localhost:8080/api/state');
-        if(!stateRes.ok){
+        if (!stateRes.ok) {
             throw new Error(`Response status: ${stateRes.status}`);
         }
 
@@ -114,6 +112,7 @@ async function updateState() {
         document.getElementById('mode').textContent = state.mode;
         document.getElementById('window').textContent = state.window.toFixed(2);
         document.getElementById('state').textContent = state.state;
+
         updateButtonText(state.mode);
 
         const alarmButton = document.querySelector('#status button');
@@ -136,7 +135,7 @@ async function setManual() {
             body: JSON.stringify({ mode: "MANUAL", position: parseInt(pos), source: "Dashboard" })
         });
 
-        if(!res.ok){
+        if (!res.ok) {
             throw new Error(`Response status: ${res.status}`);
         }
     } catch (error) {
@@ -151,7 +150,7 @@ async function setAutomatic() {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ mode: "AUTOMATIC", position: 0, source: "Dashboard" })
         });
-        if(!res.ok){
+        if (!res.ok) {
             throw new Error(`Response status: ${res.status}`);
         }
     } catch (error) {
@@ -161,13 +160,13 @@ async function setAutomatic() {
 
 async function resolveAlarm() {
     try {
-        const res = await fetch('http://localhost:8080/api/alarm', { 
+        const res = await fetch('http://localhost:8080/api/alarm', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' }
         });
-        
+
         const result = await res.json();
-        if(result.status === 'success') {
+        if (result.status === 'success') {
             showTempAlert(result.message, 'success');
         }
     } catch (error) {
@@ -184,16 +183,17 @@ function showTempAlert(message, type) {
         ${message}
         <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
     `;
-    
+
     const container = document.querySelector('.container-fluid');
     container.prepend(alertDiv);
-    
+
     setTimeout(() => {
         alertDiv.remove();
     }, 3000);
 }
 
 setInterval(updateData, 2000);
-setInterval(updateState, 1000);
 updateData();
+
+setInterval(updateState, 1000);
 updateState();
