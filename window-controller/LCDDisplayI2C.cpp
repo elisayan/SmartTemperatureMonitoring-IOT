@@ -16,20 +16,20 @@ void LCDDisplayI2C::welcome() {
   lcd.print("** SMART WINDOW **");
   lcd.setCursor(2, 2);
   lcd.print("** CONTROLLER **");
-  delay(4000);
+  delay(3000);
 
   lcd.clear();
   lcd.setCursor(0, 0);
   lcd.print("Initializing");
   for(int i = 0; i < 5; i++) {
     lcd.print(".");
-    delay(1000);
+    delay(500);
   }
 
   lcd.clear();
   lcd.setCursor(3, 1);
   lcd.print(" System Ready ");
-  delay(3000);
+  delay(2000);
   lcd.clear();
 }
 
