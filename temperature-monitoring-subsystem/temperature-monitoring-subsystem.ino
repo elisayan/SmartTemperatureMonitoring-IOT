@@ -10,81 +10,169 @@ Led redLed(RED_LED_PIN);
 
 const char* SSID = "TP-LINK_2658";
 const char* PASSWORD = "66864073";
-const char* MQTT_SERVER = "test.mosquitto.org";//"broker.mqtt-dashboard.com";
-const char* TOPIC = "temperature/data";
+const char* MQTT_SERVER = "test.mosquitto.org";
+const char* TOPIC_TEMP_DATA = "temperature/data";
+const char* TOPIC_CONTROL = "control/commands";
 
 WiFiClient espClient;
 PubSubClient mqttClient(espClient);
 
+enum State {
+  INIT,
+  WIFI_CONNECTING,
+  MQTT_CONNECTING,
+  SAMPLING,
+  PUBLISHING,
+  ERROR
+};
+
+State currentState = INIT;
+
 unsigned long lastSampleTime = 0;
 const unsigned long SAMPLING_INTERVAL = 5000;
+unsigned long lastReconnectAttempt = 0;
+const unsigned long RECONNECT_INTERVAL = 5000;
 
 void setup() {
   Serial.begin(115200);
-  setupWiFi();
-  mqttClient.setServer(MQTT_SERVER, 1883);
+  greenLed.off();
+  redLed.off();
 }
 
 void loop() {
   unsigned long now = millis();
   
-  if(now - lastSampleTime >= SAMPLING_INTERVAL) {
-    float temp = tempSensor.getTemperature();
-    Serial.println(temp);
-    sendMQTT(temp);
-    lastSampleTime = now;
+  switch (currentState) {
+    case INIT:
+      handleInitState();
+      break;
+      
+    case WIFI_CONNECTING:
+      handleWifiConnectingState();
+      break;
+      
+    case MQTT_CONNECTING:
+      handleMqttConnectingState(now);
+      break;
+      
+    case SAMPLING:
+      handleSamplingState(now);
+      break;
+      
+    case PUBLISHING:
+      handlePublishingState();
+      break;
+      
+    case ERROR:
+      handleErrorState(now);
+      break;
   }
 
   updateLeds();
   redLed.update();
-  mqttClient.loop();
-}
-
-void setupWiFi() {
-  WiFi.begin(SSID, PASSWORD);
-  Serial.print("Connecting to WiFi");
+  greenLed.update();
   
-  while(WiFi.status() != WL_CONNECTED) {
-    delay(500);
-    Serial.print(".");
+  if (currentState != INIT && currentState != WIFI_CONNECTING) {
+    mqttClient.loop();
   }
-  
-  Serial.println("\nConnected! IP address: ");
-  Serial.println(WiFi.localIP());
 }
 
-void reconnectMQTT() {
-  while(!mqttClient.connected()) {
-    Serial.print("Attempting MQTT connection...");
+void handleInitState() {
+  Serial.println("Initializing...");
+  WiFi.begin(SSID, PASSWORD);
+  currentState = WIFI_CONNECTING;
+  lastReconnectAttempt = millis();
+}
+
+void handleWifiConnectingState() {
+  if (WiFi.status() == WL_CONNECTED) {
+    Serial.println("\nWiFi connected! IP address: ");
+    Serial.println(WiFi.localIP());
+    mqttClient.setServer(MQTT_SERVER, 1883);
+    currentState = MQTT_CONNECTING;
+  } else {
+    Serial.print(".");
+    delay(500);
+  }
+}
+
+void handleMqttConnectingState(unsigned long now) {
+  if (now - lastReconnectAttempt > RECONNECT_INTERVAL) {
+    lastReconnectAttempt = now;
     
-    if(mqttClient.connect("ESP32-Temp-Monitor")) {
+    Serial.print("Attempting MQTT connection...");
+    if (mqttClient.connect("ESP32-Temp-Monitor")) {
       Serial.println("connected");
-      mqttClient.subscribe("control/commands");
+      mqttClient.subscribe(TOPIC_CONTROL);
+      currentState = SAMPLING;
     } else {
       Serial.print("failed, rc=");
       Serial.print(mqttClient.state());
-      Serial.println(" retrying in 5 seconds");
-      delay(100);
+      Serial.println(" retrying later");
+      currentState = ERROR;
     }
   }
 }
 
-void sendMQTT(float temp) {
-  if(!mqttClient.connected()) {
-    reconnectMQTT();
+void handleSamplingState(unsigned long now) {
+  if (now - lastSampleTime >= SAMPLING_INTERVAL) {
+    float temp = tempSensor.getTemperature();
+    Serial.print("Temperature: ");
+    Serial.println(temp);
+    
+    if (publishTemperature(temp)) {
+      currentState = PUBLISHING;
+    } else {
+      currentState = ERROR;
+    }
+    
+    lastSampleTime = now;
+  }
+}
+
+void handlePublishingState() {
+  currentState = SAMPLING;
+}
+
+void handleErrorState(unsigned long now) {
+  if (now % 1000 < 500) {
+    redLed.on();
+  } else {
+    redLed.off();
   }
   
+  if (now - lastReconnectAttempt > RECONNECT_INTERVAL) {
+    if (WiFi.status() != WL_CONNECTED) {
+      currentState = INIT;
+    } else if (!mqttClient.connected()) {
+      currentState = MQTT_CONNECTING;
+    } else {
+      currentState = SAMPLING;
+    }
+  }
+}
+
+bool publishTemperature(float temperature) {
   char tempMsg[50];
-  snprintf(tempMsg, 50, "%.2f", temp);
-  mqttClient.publish(TOPIC, tempMsg);
+  snprintf(tempMsg, 50, "%.2f", temperature);
+  
+  if (mqttClient.publish(TOPIC_TEMP_DATA, tempMsg)) {
+    Serial.println("Publish successful");
+    return true;
+  } else {
+    Serial.println("Publish failed");
+    return false;
+  }
 }
 
 void updateLeds() {
-  if(WiFi.status() == WL_CONNECTED && mqttClient.connected()) {
+  if (currentState == SAMPLING || currentState == PUBLISHING) {
     greenLed.on();
     redLed.off();
+  } else if (currentState == ERROR) {
+    greenLed.off();
   } else {
     greenLed.off();
-    redLed.on();
+    redLed.off();
   }
 }
