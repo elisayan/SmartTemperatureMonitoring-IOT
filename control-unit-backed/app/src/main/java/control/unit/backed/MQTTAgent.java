@@ -101,8 +101,9 @@ public class MQTTAgent extends AbstractVerticle {
     private void handleTemperature(String tempStr) throws InterruptedException {
         try {
             double temp = Double.parseDouble(tempStr);
-            currentState = updateSystemState(temp);
             int pos = calculateWindowPosition(temp);
+            
+            currentState = updateSystemState(temp);
 
             controller.updateArduinoData(temp, pos);
             controller.updateDashboardData(temp, pos, currentState.name());

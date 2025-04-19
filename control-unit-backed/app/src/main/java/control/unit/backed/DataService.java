@@ -73,7 +73,6 @@ public class DataService extends AbstractVerticle {
         if (temperatureData.size() > MAX_SIZE) {
             temperatureData.remove(0);
         }
-        //updateAverageData();
     }
 
     private void handleGetTemperatureData(RoutingContext ctx) {
@@ -87,7 +86,7 @@ public class DataService extends AbstractVerticle {
     
         JsonObject response = new JsonObject()
                 .put("averageTemperature", calculateAverage())
-                .put("currentTemperature", getCurrentTemperature()) // Usa il metodo invece della variabile
+                .put("currentTemperature", getCurrentTemperature())
                 .put("maxTemperature", maxTemperature)
                 .put("minTemperature", minTemperature)
                 .put("temperatures", getLastNTemperatures(N))
