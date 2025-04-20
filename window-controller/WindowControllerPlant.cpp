@@ -73,7 +73,7 @@ void WindowControllerPlant::checkButtonState() {
   pButton->sync();
 
   if (pButton->isClicked()) {
-    toggleMode();  // Nuovo nome per maggiore chiarezza
+    toggleMode();
     setManualSource("ARDUINO");
 
     Serial.print("MODE:");
@@ -82,11 +82,11 @@ void WindowControllerPlant::checkButtonState() {
 }
 
 void WindowControllerPlant::toggleMode() {
-  const String newMode = (arduinoMode == "MANUAL") ? "AUTOMATIC" : "MANUAL";
+  String newMode = (arduinoMode == "MANUAL") ? "AUTOMATIC" : "MANUAL";
   handleModeChange(newMode);
 }
 
-void WindowControllerPlant::handleModeChange(const String& mode) {
+void WindowControllerPlant::handleModeChange(String mode) {
   state = BUTTON_PRESSED;
   arduinoMode = mode;
 

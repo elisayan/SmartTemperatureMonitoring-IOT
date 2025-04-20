@@ -25,7 +25,7 @@ public:
   bool isButtonPressed();
   void checkButtonState();
   void toggleMode();
-  void handleButtonPress(String mode);
+  void handleModeChange(String mode);
 
   void setCurrentTemperature(float temp);
   float getCurrentTemperature();

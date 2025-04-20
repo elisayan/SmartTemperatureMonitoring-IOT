@@ -19,7 +19,7 @@ void MsgReceiverTask::processLine(const String line) {
   if (line.startsWith("MODE:")) {
     String mode = line.substring(5);
     pPlant->setManualSource("DASHBOARD");
-    pPlant->handleButtonPress(mode);
+    pPlant->handleModeChange(mode);
   }
 
   if (line.startsWith("TEMP:")) {
