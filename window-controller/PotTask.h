@@ -5,11 +5,18 @@
 #include "WindowControllerPlant.h"
 
 class PotTask : public Task {
-  WindowControllerPlant* pPlant;
-
 public:
   PotTask(WindowControllerPlant* pPlant);
   void tick();
+
+private:
+  enum {
+    LISTEN,
+    UPDATE
+  } state;
+
+  WindowControllerPlant* pPlant;
+  int previousValue = -1; 
 };
 
 #endif

@@ -6,13 +6,20 @@
 #include "WindowControllerPlant.h"
 
 class MsgReceiverTask : public Task {
-  WindowControllerPlant* pPlant;
-
-  void processLine(const String line);
-
 public:
   MsgReceiverTask(WindowControllerPlant* pPlant);
   void tick();
+
+private:
+  void processLine(const String line);
+
+  enum {
+    RECEIVING,
+    UPDATE
+  } state;
+
+  WindowControllerPlant* pPlant;
+  Msg* msg;
 };
 
 #endif

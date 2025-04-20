@@ -1,56 +1,54 @@
-#ifndef __WINDOW_CONTROLLER_PLANT__
-#define __WINDOW_CONTROLLER_PLANT__
+#ifndef __WINDOWCONTROLLERPLANT__
+#define __WINDOWCONTROLLERPLANT__
 
-#include <Arduino.h>
+#include <Arduino.h> 
+
 #include "ServoMotor.h"
-#include "LCDDisplayI2C.h"
 #include "ButtonImpl.h"
 #include "Potentiometer.h"
+#include "LCDDisplayI2C.h"
+
+enum PlantState {
+  INIT,
+  AUTOMATIC_MODE,
+  MANUAL_MODE
+};
 
 class WindowControllerPlant {
 public:
   WindowControllerPlant();
-  void init();
 
+  void init();
   void switchToAutomaticMode();
   void switchToManualMode();
+
   bool isInAutomaticMode();
   bool isInManualMode();
+
   void setManualSource(String source);
+  String getManualSource();
 
-  void setWindowOpening(int percentage);
   int readPotentiometer();
-  void setWindowFromPotentiometer();
-
-  bool isButtonPressed();
-  void checkButtonState();
-  void toggleMode();
-  void handleModeChange(String mode);
+  void setWindowOpening(int percentage);
 
   void setCurrentTemperature(float temp);
-  float getCurrentTemperature();
-
-  void updateDisplay();
+  void handleModeChange(String mode);
+  void checkButtonState();
 
 private:
-  enum {
-    IDLE,
-    AUTOMATIC_MODE,
-    MANUAL_MODE,
-    UPDATE_DISPLAY,
-    MOVING_WINDOW,
-    BUTTON_PRESSED
-  } state;
-
   ServoMotor* pMotor;
-  LCDDisplayI2C* pLcd;
-  ButtonImpl* pButton;
+  Button* pButton;
   Potentiometer* pPot;
+  LCDDisplayI2C* pLcd;
+
   int currentOpening;
   float currentTemperature;
   String arduinoMode;
-  unsigned long lastUpdateTime;
   String manualSource;
+
+  PlantState state;
+
+  void updateDisplay();
 };
 
 #endif

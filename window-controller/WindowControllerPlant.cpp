@@ -18,7 +18,7 @@ void WindowControllerPlant::init() {
   pMotor->on();
   Serial.print("MODE:");
   Serial.println(isInManualMode() ? "MANUAL" : "AUTOMATIC");
-  state = IDLE;
+  state = INIT;
 }
 
 void WindowControllerPlant::switchToAutomaticMode() {
@@ -41,39 +41,25 @@ void WindowControllerPlant::setManualSource(String source) {
   manualSource = source;
 }
 
-int WindowControllerPlant::readPotentiometer() {
-  return pPot->getValue();
+String WindowControllerPlant::getManualSource() {
+  return manualSource;
 }
 
-void WindowControllerPlant::setWindowFromPotentiometer() {
-  if (arduinoMode == "MANUAL" && manualSource == "ARDUINO") {
-    int potValue = readPotentiometer();
-    int newPos = map(potValue, 0, 1023, 0, 100);
-
-    if (newPos != currentOpening) {
-      setWindowOpening(newPos);
-      Serial.print("POS:");
-      Serial.println(newPos);
-    }
-  }
+int WindowControllerPlant::readPotentiometer() {
+  return pPot->getValue();
 }
 
 void WindowControllerPlant::setWindowOpening(int percentage) {
   pMotor->setPosition(percentage);
   currentOpening = percentage;
   updateDisplay();
-  state = MOVING_WINDOW;
-}
-
-bool WindowControllerPlant::isButtonPressed() {
-  return state == BUTTON_PRESSED;
 }
 
 void WindowControllerPlant::checkButtonState() {
   pButton->sync();
-
   if (pButton->isClicked()) {
-    toggleMode();
+    String newMode = (arduinoMode == "MANUAL") ? "AUTOMATIC" : "MANUAL";
+    handleModeChange(newMode);
     setManualSource("ARDUINO");
 
     Serial.print("MODE:");
@@ -81,15 +67,8 @@ void WindowControllerPlant::checkButtonState() {
   }
 }
 
-void WindowControllerPlant::toggleMode() {
-  String newMode = (arduinoMode == "MANUAL") ? "AUTOMATIC" : "MANUAL";
-  handleModeChange(newMode);
-}
-
 void WindowControllerPlant::handleModeChange(String mode) {
-  state = BUTTON_PRESSED;
   arduinoMode = mode;
-
   if (arduinoMode == "MANUAL") {
     switchToManualMode();
   } else if (arduinoMode == "AUTOMATIC") {
