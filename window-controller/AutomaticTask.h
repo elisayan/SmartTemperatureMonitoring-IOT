@@ -1,13 +1,13 @@
-#ifndef __MSG_RECEIVER_TASK__
-#define __MSG_RECEIVER_TASK__
+#ifndef __AUTOMATIC_TASK__
+#define __AUTOMATIC_TASK__
 
 #include "Task.h"
 #include "MsgService.h"
 #include "WindowControllerPlant.h"
 
-class MsgReceiverTask : public Task {
+class AutomaticTask : public Task {
 public:
-  MsgReceiverTask(WindowControllerPlant* pPlant);
+  AutomaticTask(WindowControllerPlant* pPlant);
   void tick();
 
 private:

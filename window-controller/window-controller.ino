@@ -3,9 +3,9 @@
 #include "ServoMotor.h"
 #include "Config.h"
 #include "MsgService.h"
-#include "MsgReceiverTask.h"
+#include "AutomaticTask.h"
 #include "ButtonTask.h"
-#include "PotTask.h"
+#include "ManualTask.h"
 #include "LCDDisplayI2C.h"
 
 Scheduler scheduler;
@@ -21,17 +21,14 @@ void setup() {
   windowPlant->init();
   scheduler.init(100);
 
-  Task* msgTask = new MsgReceiverTask(windowPlant);
-  Task* btnTask = new ButtonTask(windowPlant);
-  Task* potTask = new PotTask(windowPlant);
+  Task* autoTask = new AutomaticTask(windowPlant);
+  Task* manualTask = new ManualTask(windowPlant);
 
-  msgTask->init(500);
-  btnTask->init(100);
-  potTask->init(1000);
+  autoTask->init(500);
+  manualTask->init(1000);
 
-  scheduler.addTask(msgTask);
-  scheduler.addTask(btnTask);
-  scheduler.addTask(potTask);
+  scheduler.addTask(autoTask);
+  scheduler.addTask(manualTask);
 }
 
 void loop() {

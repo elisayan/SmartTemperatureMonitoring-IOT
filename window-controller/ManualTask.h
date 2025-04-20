@@ -1,12 +1,12 @@
-#ifndef __POT_TASK__
-#define __POT_TASK__
+#ifndef __MANUAL_TASK__
+#define __MANUAL_TASK__
 
 #include "Task.h"
 #include "WindowControllerPlant.h"
 
-class PotTask : public Task {
+class ManualTask : public Task {
 public:
-  PotTask(WindowControllerPlant* pPlant);
+  ManualTask(WindowControllerPlant* pPlant);
   void tick();
 
 private:

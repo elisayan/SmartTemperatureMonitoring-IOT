@@ -1,14 +1,15 @@
-#include "MsgReceiverTask.h"
+#include "AutomaticTask.h"
 #include "Arduino.h"
 
-MsgReceiverTask::MsgReceiverTask(WindowControllerPlant* pPlant) {
+AutomaticTask::AutomaticTask(WindowControllerPlant* pPlant) {
   this->pPlant = pPlant;
   state = RECEIVING;
 }
 
-void MsgReceiverTask::tick() {
+void AutomaticTask::tick() {
   switch (state) {
     case RECEIVING:
+      pPlant->checkButtonState();
       if (MsgService.isMsgAvailable()) {
         msg = MsgService.receiveMsg();
         if (msg) {

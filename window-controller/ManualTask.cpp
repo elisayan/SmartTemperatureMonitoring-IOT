@@ -1,14 +1,15 @@
-#include "PotTask.h"
+#include "ManualTask.h"
 #include "Arduino.h"
 
-PotTask::PotTask(WindowControllerPlant* pPlant) {
+ManualTask::ManualTask(WindowControllerPlant* pPlant) {
   this->pPlant = pPlant;
   state = LISTEN;
 }
 
-void PotTask::tick() {
+void ManualTask::tick() {
   switch(state) {
     case LISTEN:
+      pPlant->checkButtonState();
       if(pPlant->isInManualMode()){
         state = UPDATE;
       }
