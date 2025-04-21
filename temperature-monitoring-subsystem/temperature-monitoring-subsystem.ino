@@ -12,7 +12,6 @@ const char* SSID = "TP-LINK_2658";
 const char* PASSWORD = "66864073";
 const char* MQTT_SERVER = "test.mosquitto.org"; //broker.mqtt-dashboard.com";
 const char* TOPIC_TEMP_DATA = "temperature/data";
-const char* TOPIC_CONTROL = "control/commands";
 
 WiFiClient espClient;
 PubSubClient mqttClient(espClient);
@@ -103,7 +102,6 @@ void handleMqttConnectingState(unsigned long now) {
     Serial.print("Attempting MQTT connection...");
     if (mqttClient.connect("ESP32-Temp-Monitor")) {
       Serial.println("connected");
-      mqttClient.subscribe(TOPIC_CONTROL);
       currentState = SAMPLING;
     } else {
       Serial.print("failed, rc=");
