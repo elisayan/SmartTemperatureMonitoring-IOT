@@ -12,10 +12,10 @@ public class MQTTAgent extends AbstractVerticle {
     private MqttClient client;
     private Controller controller;
 
-    private SystemState currentState = SystemState.NORMAL;
+    private TemperatureState currentState = TemperatureState.NORMAL;
     private long tooHotStartTime = 0;
 
-    public enum SystemState {
+    public enum TemperatureState {
         NORMAL, HOT, TOO_HOT, ALARM
     }
 
@@ -52,15 +52,15 @@ public class MQTTAgent extends AbstractVerticle {
     }
 
     public void resetAlarmState() {
-        this.currentState = SystemState.NORMAL;
+        this.currentState = TemperatureState.NORMAL;
         this.tooHotStartTime = 0;
     }
 
-    public SystemState getCurrentState() {
+    public TemperatureState getCurrentState() {
         return currentState;
     }
 
-    private SystemState updateSystemState(double temp) {
+    private TemperatureState updateTemperatureState(double temp) {
         long now = System.currentTimeMillis();
     
         switch (currentState) {
@@ -68,23 +68,23 @@ public class MQTTAgent extends AbstractVerticle {
             case HOT:
                 if (temp > T2) {
                     tooHotStartTime = now;
-                    return SystemState.TOO_HOT;
+                    return TemperatureState.TOO_HOT;
                 } else if (temp >= T1) {
-                    return SystemState.HOT;
+                    return TemperatureState.HOT;
                 } else {
-                    return SystemState.NORMAL;
+                    return TemperatureState.NORMAL;
                 }
     
             case TOO_HOT:
                 if (temp <= T2) {
-                    return temp >= T1 ? SystemState.HOT : SystemState.NORMAL;
+                    return temp >= T1 ? TemperatureState.HOT : TemperatureState.NORMAL;
                 } else if (now - tooHotStartTime > DT) {
-                    return SystemState.ALARM;
+                    return TemperatureState.ALARM;
                 }
-                return SystemState.TOO_HOT;
+                return TemperatureState.TOO_HOT;
     
             case ALARM:
-                return SystemState.ALARM;
+                return TemperatureState.ALARM;
         }
     
         return currentState;
@@ -103,7 +103,7 @@ public class MQTTAgent extends AbstractVerticle {
             double temp = Double.parseDouble(tempStr);
             int pos = calculateWindowPosition(temp);
             
-            currentState = updateSystemState(temp);
+            currentState = updateTemperatureState(temp);
 
             controller.updateArduinoData(temp, pos);
             controller.updateDashboardData(temp, pos, currentState.name());

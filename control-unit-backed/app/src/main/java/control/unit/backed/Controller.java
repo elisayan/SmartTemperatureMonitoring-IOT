@@ -70,7 +70,7 @@ public class Controller {
     }
 
     public void resolveAlarm() {
-        if(mqttAgent.getCurrentState() == MQTTAgent.SystemState.ALARM) {
+        if(mqttAgent.getCurrentState() == MQTTAgent.TemperatureState.ALARM) {
             mqttAgent.resetAlarmState();
             dashboard.updateState("NORMAL");
             System.out.println("Alarm manually resolved");
